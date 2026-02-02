@@ -1,0 +1,113 @@
+import { Product } from '@/types';
+
+export const products: Product[] = [
+  {
+    id: '1',
+    name: 'Velvet Evening Clutch',
+    price: 1850,
+    category: 'Bags',
+    images: [
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
+      'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80',
+    ],
+    description: 'An exquisite velvet evening clutch featuring gold-tone hardware and a detachable chain strap. Lined with silk, this piece embodies timeless elegance.',
+    sizes: ['One Size'],
+    inStock: true,
+    isNew: true,
+  },
+  {
+    id: '2',
+    name: 'Leather Tote Luxe',
+    price: 2450,
+    category: 'Bags',
+    images: [
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
+    ],
+    description: 'Crafted from the finest Italian leather, this spacious tote features a structured silhouette with refined gold details.',
+    sizes: ['One Size'],
+    inStock: true,
+  },
+  {
+    id: '3',
+    name: 'Strappy Stiletto Heel',
+    price: 1290,
+    category: 'Shoes',
+    images: [
+      'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80',
+      'https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=800&q=80',
+    ],
+    description: 'Elegant strappy stilettos with a 100mm heel. Handcrafted in Italy with a leather sole and padded insole for comfort.',
+    sizes: ['36', '37', '38', '39', '40', '41'],
+    inStock: true,
+    isNew: true,
+  },
+  {
+    id: '4',
+    name: 'Embossed Leather Loafer',
+    price: 980,
+    category: 'Shoes',
+    images: [
+      'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=800&q=80',
+      'https://images.unsplash.com/photo-1582897085656-c636d006a246?w=800&q=80',
+    ],
+    description: 'Classic loafers reimagined with embossed leather and gold horsebit detail. Perfect for elevated everyday style.',
+    sizes: ['36', '37', '38', '39', '40', '41', '42'],
+    inStock: true,
+  },
+  {
+    id: '5',
+    name: 'Gold Chain Necklace',
+    price: 890,
+    category: 'Accessories',
+    images: [
+      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
+      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80',
+    ],
+    description: 'An iconic chain necklace in 18k gold-plated brass. A statement piece that elevates any ensemble.',
+    sizes: ['One Size'],
+    inStock: true,
+  },
+  {
+    id: '6',
+    name: 'Silk Scarf Carré',
+    price: 450,
+    category: 'Accessories',
+    images: [
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
+      'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&q=80',
+    ],
+    description: 'A luxurious silk twill scarf featuring an exclusive print. Hand-rolled edges showcase exceptional craftsmanship.',
+    sizes: ['90x90cm'],
+    inStock: true,
+    isNew: true,
+  },
+  {
+    id: '7',
+    name: 'Mini Crossbody Bag',
+    price: 1650,
+    category: 'Bags',
+    images: [
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
+      'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80',
+    ],
+    description: 'The quintessential mini crossbody in supple calfskin leather. Adjustable strap and signature clasp closure.',
+    sizes: ['One Size'],
+    inStock: true,
+  },
+  {
+    id: '8',
+    name: 'Platform Sandal',
+    price: 1180,
+    category: 'Shoes',
+    images: [
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80',
+      'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&q=80',
+    ],
+    description: 'Bold platform sandals with architectural lines. Features a 75mm heel and leather upper with ankle strap.',
+    sizes: ['36', '37', '38', '39', '40'],
+    inStock: true,
+  },
+];
+
+export const categories = ['All', 'Bags', 'Shoes', 'Accessories'];
