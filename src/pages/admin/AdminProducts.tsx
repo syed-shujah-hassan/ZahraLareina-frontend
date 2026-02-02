@@ -12,10 +12,18 @@ const AdminProducts = () => {
     name: '',
     price: '',
     category: 'Bags',
+    subcategory: '',
     description: '',
-    images: '',
+    imagePreview: '',
     sizes: '',
+    inStock: true,
   });
+
+  const subcategoryOptions: Record<string, string[]> = {
+    Bags: ['Clutches', 'Totes', 'Crossbody'],
+    Shoes: ['Heels', 'Loafers', 'Sandals'],
+    Accessories: ['Necklaces', 'Scarves'],
+  };
 
   const openModal = (product?: Product) => {
     if (product) {
@@ -24,9 +32,11 @@ const AdminProducts = () => {
         name: product.name,
         price: product.price.toString(),
         category: product.category,
+        subcategory: product.subcategory || '',
         description: product.description,
-        images: product.images.join(', '),
+        imagePreview: product.images[0] || '',
         sizes: product.sizes.join(', '),
+        inStock: product.inStock ?? true,
       });
     } else {
       setEditingProduct(null);
@@ -34,9 +44,11 @@ const AdminProducts = () => {
         name: '',
         price: '',
         category: 'Bags',
+        subcategory: '',
         description: '',
-        images: '',
+        imagePreview: '',
         sizes: '',
+        inStock: true,
       });
     }
     setIsModalOpen(true);
@@ -54,10 +66,13 @@ const AdminProducts = () => {
       name: formData.name,
       price: parseFloat(formData.price),
       category: formData.category,
+       subcategory: formData.subcategory || undefined,
       description: formData.description,
-      images: formData.images.split(',').map(s => s.trim()),
+      images: formData.imagePreview
+        ? [formData.imagePreview]
+        : editingProduct?.images || [],
       sizes: formData.sizes.split(',').map(s => s.trim()),
-      inStock: true,
+      inStock: formData.inStock,
     };
 
     if (editingProduct) {
@@ -123,16 +138,19 @@ const AdminProducts = () => {
                 <td className="py-4 px-4 text-muted-foreground">{product.category}</td>
                 <td className="py-4 px-4 text-right">${product.price.toLocaleString()}</td>
                 <td className="py-4 px-4 text-center">
-                  <span
+                  <select
+                    value={product.inStock ? 'in' : 'out'}
+                    onChange={e => handleInlineStatusChange(product.id, e.target.value)}
                     className={cn(
-                      "inline-block px-3 py-1 text-xs",
+                      "text-xs px-2 py-1 border bg-transparent",
                       product.inStock
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "border-green-500 text-green-700"
+                        : "border-red-500 text-red-700"
                     )}
                   >
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
-                  </span>
+                    <option value="in">In Stock</option>
+                    <option value="out">Out of Stock</option>
+                  </select>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center justify-end gap-2">
@@ -203,7 +221,13 @@ const AdminProducts = () => {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        category: e.target.value,
+                        subcategory: '',
+                      })
+                    }
                     className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
                   >
                     {categories.filter(c => c !== 'All').map(cat => (
@@ -213,6 +237,24 @@ const AdminProducts = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+              {/* Subcategory */}
+              <div>
+                <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                  Subcategory
+                </label>
+                <select
+                  value={formData.subcategory}
+                  onChange={e => setFormData({ ...formData, subcategory: e.target.value })}
+                  className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
+                >
+                  <option value="">Select subcategory</option>
+                  {(subcategoryOptions[formData.category] || []).map(sub => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
@@ -228,16 +270,32 @@ const AdminProducts = () => {
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
-                  Image URLs (comma separated)
+                  Product Image
                 </label>
-                <input
-                  type="text"
-                  value={formData.images}
-                  onChange={e => setFormData({ ...formData, images: e.target.value })}
-                  className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
-                  placeholder="https://..."
-                  required
-                />
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-20 bg-secondary overflow-hidden flex-shrink-0">
+                    {formData.imagePreview ? (
+                      <img
+                        src={formData.imagePreview}
+                        alt={formData.name || 'Preview'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+                        No Image
+                      </div>
+                    )}
+                  </div>
+                  <label className="inline-flex items-center justify-center px-3 py-2 border border-border text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:border-foreground cursor-pointer">
+                    <span>Upload Image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => handleImageFileChange(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
@@ -251,6 +309,25 @@ const AdminProducts = () => {
                   placeholder="S, M, L or One Size"
                   required
                 />
+              </div>
+              {/* Status */}
+              <div>
+                <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                  Status
+                </label>
+                <select
+                  value={formData.inStock ? 'in' : 'out'}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      inStock: e.target.value === 'in',
+                    }))
+                  }
+                  className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
+                >
+                  <option value="in">In Stock</option>
+                  <option value="out">Out of Stock</option>
+                </select>
               </div>
               <button type="submit" className="w-full btn-luxury">
                 <span>{editingProduct ? 'Update Product' : 'Add Product'}</span>

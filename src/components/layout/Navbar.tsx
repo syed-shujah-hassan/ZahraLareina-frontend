@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Search, Menu, ShoppingBag, X, Heart } from 'lucide-react';
+import { User, Search, Menu, ShoppingBag, X, Heart, ChevronRight } from 'lucide-react';
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
@@ -9,9 +9,32 @@ const menuItems = [
   { label: 'Shop', href: '/shop' },
   { label: 'New Arrivals', href: '/shop?filter=new' },
   { label: 'Collections', href: '/collections' },
-  { label: 'Bags', href: '/shop?category=Bags' },
-  { label: 'Shoes', href: '/shop?category=Shoes' },
-  { label: 'Accessories', href: '/shop?category=Accessories' },
+  {
+    label: 'Bags',
+    href: '/shop?category=Bags',
+    children: [
+      { label: 'Clutches', href: '/shop?category=Bags&sub=Clutches' },
+      { label: 'Totes', href: '/shop?category=Bags&sub=Totes' },
+      { label: 'Crossbody', href: '/shop?category=Bags&sub=Crossbody' },
+    ],
+  },
+  {
+    label: 'Shoes',
+    href: '/shop?category=Shoes',
+    children: [
+      { label: 'Heels', href: '/shop?category=Shoes&sub=Heels' },
+      { label: 'Loafers', href: '/shop?category=Shoes&sub=Loafers' },
+      { label: 'Sandals', href: '/shop?category=Shoes&sub=Sandals' },
+    ],
+  },
+  {
+    label: 'Accessories',
+    href: '/shop?category=Accessories',
+    children: [
+      { label: 'Necklaces', href: '/shop?category=Accessories&sub=Necklaces' },
+      { label: 'Scarves', href: '/shop?category=Accessories&sub=Scarves' },
+    ],
+  },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -22,6 +45,7 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [openMenuItem, setOpenMenuItem] = useState<string | null>(null);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -90,13 +114,6 @@ export const Navbar = () => {
                         My Orders
                       </Link>
                       <Link
-                        to="/account"
-                        className="block px-4 py-3 text-sm hover:bg-secondary transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        Account Settings
-                      </Link>
-                      <Link
                         to="/saved"
                         className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
@@ -146,16 +163,18 @@ export const Navbar = () => {
 
         {/* Search Bar */}
         {isSearchOpen && (
-          <div className="absolute top-full left-0 right-0 bg-background border-b border-border animate-fade-in">
+          <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-sm border-b border-border animate-fade-in">
             <div className="container mx-auto px-6 py-4">
               <div className="flex items-center gap-4">
-                <Search size={20} strokeWidth={1.5} className="text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground"
-                  autoFocus
-                />
+                <div className="flex-1 flex items-center gap-3 bg-card border border-border px-4 py-2 shadow-soft focus-within:border-foreground focus-within:shadow-medium transition-all">
+                  <Search size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search the collection..."
+                    className="flex-1 bg-transparent text-sm md:text-base outline-none placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                </div>
                 <button
                   onClick={() => setIsSearchOpen(false)}
                   className="p-2 hover:opacity-70 transition-opacity"
@@ -176,32 +195,92 @@ export const Navbar = () => {
             onClick={() => setIsMenuOpen(false)}
           />
           <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-background z-50 animate-slide-in-right">
-            <div className="flex flex-col h-full">
+            <div className="relative flex flex-col h-full">
               <div className="flex justify-end p-6">
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 hover:opacity-70 transition-opacity"
+                  className="p-2 rounded-full transition-all duration-200 hover:bg-foreground hover:text-background"
                   aria-label="Close menu"
                 >
                   <X size={24} strokeWidth={1.5} />
                 </button>
               </div>
-              <nav className="flex-1 px-12 py-8 stagger-children">
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className="block py-4 font-serif text-3xl tracking-wide hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+              <nav className="flex-1 px-12 py-8 stagger-children space-y-4 overflow-y-auto no-scrollbar">
+                {menuItems.map((item) => {
+                  const hasChildren = Array.isArray((item as any).children) && (item as any).children.length > 0;
+
+                  if (!hasChildren) {
+                    return (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className="w-full text-left py-2 font-serif text-3xl tracking-wide hover:text-primary transition-colors luxury-underline"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <Link to={item.href}>{item.label}</Link>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className="w-full text-left py-2 font-serif text-3xl tracking-wide hover:text-primary transition-colors luxury-underline flex items-center justify-between group"
+                      onClick={() => setOpenMenuItem(item.label)}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight
+                        size={18}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      />
+                    </button>
+                  );
+                })}
               </nav>
-              <div className="p-12 border-t border-border">
-                <p className="text-luxury-subtitle mb-4">Contact</p>
-                <p className="text-sm text-muted-foreground">contact@zahralareina.com</p>
-              </div>
+
+              {/* Nested submenu panel for items with subcategories */}
+              {openMenuItem && (() => {
+                const active = menuItems.find(
+                  (m) => (m as any).label === openMenuItem && Array.isArray((m as any).children)
+                ) as any | undefined;
+
+                if (!active) return null;
+
+                const children = active.children as { label: string; href: string }[];
+
+                return (
+                  <div className="absolute top-0 right-0 bottom-0 w-full bg-background border-l border-border animate-slide-in-right flex flex-col">
+                    <div className="flex items-center justify-between px-8 pt-8 pb-4 border-b border-border">
+                      <button
+                        type="button"
+                        className="text-sm tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setOpenMenuItem(null)}
+                      >
+                        Back
+                      </button>
+                      <span className="font-serif text-xl tracking-wide">{active.label}</span>
+                    </div>
+                    <div className="flex-1 px-12 py-6 space-y-3 overflow-y-auto no-scrollbar">
+                      {children.map((child) => (
+                        <button
+                          key={child.label}
+                          type="button"
+                          className="w-full text-left text-sm tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors luxury-underline"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setOpenMenuItem(null);
+                          }}
+                        >
+                          <Link to={child.href}>{child.label}</Link>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </>

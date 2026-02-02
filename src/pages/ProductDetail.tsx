@@ -15,6 +15,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [sizeError, setSizeError] = useState(false);
 
   if (!product) {
     return (
@@ -36,8 +37,10 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!selectedSize && product.sizes.length > 1) {
-      return; // Show error or shake animation
+      setSizeError(true);
+      return;
     }
+    setSizeError(false);
     const size = selectedSize || product.sizes[0];
     for (let i = 0; i < quantity; i++) {
       addToCart(product, size);
@@ -127,18 +130,27 @@ const ProductDetail = () => {
                     {product.sizes.map(size => (
                       <button
                         key={size}
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => {
+                          setSelectedSize(size);
+                          setSizeError(false);
+                        }}
                         className={cn(
                           "min-w-[48px] h-12 px-4 border transition-all text-sm",
                           selectedSize === size
                             ? "border-foreground bg-foreground text-background"
-                            : "border-border hover:border-foreground"
+                            : "border-border hover:border-foreground",
+                          sizeError && !selectedSize && "border-destructive"
                         )}
                       >
                         {size}
                       </button>
                     ))}
                   </div>
+                  {sizeError && (
+                    <p className="mt-2 text-xs text-destructive">
+                      Please select a size before adding to cart.
+                    </p>
+                  )}
                 </div>
               )}
 

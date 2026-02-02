@@ -6,6 +6,7 @@ export const products: Product[] = [
     name: 'Velvet Evening Clutch',
     price: 1850,
     category: 'Bags',
+    subcategory: 'Clutches',
     images: [
       'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
       'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80',
@@ -20,6 +21,7 @@ export const products: Product[] = [
     name: 'Leather Tote Luxe',
     price: 2450,
     category: 'Bags',
+    subcategory: 'Totes',
     images: [
       'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
@@ -33,6 +35,7 @@ export const products: Product[] = [
     name: 'Strappy Stiletto Heel',
     price: 1290,
     category: 'Shoes',
+    subcategory: 'Heels',
     images: [
       'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80',
       'https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=800&q=80',
@@ -47,6 +50,7 @@ export const products: Product[] = [
     name: 'Embossed Leather Loafer',
     price: 980,
     category: 'Shoes',
+    subcategory: 'Loafers',
     images: [
       'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=800&q=80',
       'https://images.unsplash.com/photo-1582897085656-c636d006a246?w=800&q=80',
@@ -60,6 +64,7 @@ export const products: Product[] = [
     name: 'Gold Chain Necklace',
     price: 890,
     category: 'Accessories',
+    subcategory: 'Necklaces',
     images: [
       'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
       'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80',
@@ -73,6 +78,7 @@ export const products: Product[] = [
     name: 'Silk Scarf Carré',
     price: 450,
     category: 'Accessories',
+    subcategory: 'Scarves',
     images: [
       'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
       'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&q=80',
@@ -87,6 +93,7 @@ export const products: Product[] = [
     name: 'Mini Crossbody Bag',
     price: 1650,
     category: 'Bags',
+    subcategory: 'Crossbody',
     images: [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
       'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80',

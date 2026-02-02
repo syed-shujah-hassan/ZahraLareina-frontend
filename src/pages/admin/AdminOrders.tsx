@@ -110,8 +110,12 @@ const statusColors = {
 };
 
 const AdminOrders = () => {
-  const [orders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const handleStatusChange = (id: string, status: Order['status']) => {
+    setOrders(prev => prev.map(order => (order.id === id ? { ...order, status } : order)));
+  };
 
   return (
     <div className="space-y-8">
@@ -149,9 +153,21 @@ const AdminOrders = () => {
                 </td>
                 <td className="py-4 px-4 text-muted-foreground">{order.date}</td>
                 <td className="py-4 px-4 text-center">
-                  <span className={cn("inline-block px-3 py-1 text-xs capitalize", statusColors[order.status])}>
-                    {order.status}
-                  </span>
+                  <select
+                    value={order.status}
+                    onChange={e =>
+                      handleStatusChange(order.id, e.target.value as Order['status'])
+                    }
+                    className={cn(
+                      "text-xs px-2 py-1 rounded-none border border-transparent capitalize cursor-pointer",
+                      statusColors[order.status]
+                    )}
+                  >
+                    <option value="pending">pending</option>
+                    <option value="processing">processing</option>
+                    <option value="shipped">shipped</option>
+                    <option value="delivered">delivered</option>
+                  </select>
                 </td>
                 <td className="py-4 px-4 text-right">${order.total.toLocaleString()}</td>
                 <td className="py-4 px-4">

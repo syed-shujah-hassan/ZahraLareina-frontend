@@ -46,7 +46,11 @@ const mockCustomers: Customer[] = [
 ];
 
 const AdminCustomers = () => {
-  const [customers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+
+  const handleStatusChange = (id: string, status: Customer['status']) => {
+    setCustomers(prev => prev.map(c => (c.id === id ? { ...c, status } : c)));
+  };
 
   return (
     <div className="space-y-8">
@@ -108,16 +112,21 @@ const AdminCustomers = () => {
                 <td className="py-4 px-4 text-muted-foreground">{customer.joinDate}</td>
                 <td className="py-4 px-4 text-center">{customer.ordersCount}</td>
                 <td className="py-4 px-4 text-center">
-                  <span
+                  <select
+                    value={customer.status}
+                    onChange={e =>
+                      handleStatusChange(customer.id, e.target.value as Customer['status'])
+                    }
                     className={cn(
-                      "inline-block px-3 py-1 text-xs capitalize",
+                      "text-xs px-3 py-1 rounded-none border border-transparent capitalize cursor-pointer",
                       customer.status === 'active'
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-700"
                     )}
                   >
-                    {customer.status}
-                  </span>
+                    <option value="active">active</option>
+                    <option value="inactive">inactive</option>
+                  </select>
                 </td>
               </tr>
             ))}

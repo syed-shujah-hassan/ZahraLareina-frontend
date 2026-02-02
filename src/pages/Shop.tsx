@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -24,8 +24,10 @@ const Shop = () => {
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'All';
   const isNewFilter = searchParams.get('filter') === 'new';
+  const initialSubcategory = searchParams.get('sub') || 'All';
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(initialSubcategory);
   const [selectedPriceRange, setSelectedPriceRange] = useState(priceRanges[0]);
   const [sortBy, setSortBy] = useState('newest');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -41,6 +43,11 @@ const Shop = () => {
     // Filter by category
     if (selectedCategory !== 'All') {
       result = result.filter(p => p.category === selectedCategory);
+    }
+
+    // Filter by subcategory (within the selected category)
+    if (selectedCategory !== 'All' && selectedSubcategory !== 'All') {
+      result = result.filter(p => p.subcategory === selectedSubcategory);
     }
 
     // Filter by price
@@ -62,37 +69,59 @@ const Shop = () => {
     }
 
     return result;
-  }, [selectedCategory, selectedPriceRange, sortBy, isNewFilter]);
+  }, [selectedCategory, selectedSubcategory, selectedPriceRange, sortBy, isNewFilter]);
+
+  // Keep selectedCategory and selectedSubcategory in sync with URL query
+  // so that navigating directly to /shop?category=Bags&sub=Clutches
+  // correctly pre-filters products.
+  useEffect(() => {
+    setSelectedCategory(initialCategory);
+    setSelectedSubcategory(initialSubcategory || 'All');
+  }, [initialCategory, initialSubcategory]);
+
+  // Derive available subcategories for the current category
+  const availableSubcategories = useMemo(() => {
+    if (selectedCategory === 'All') return [] as string[];
+    const subs = products
+      .filter(p => p.category === selectedCategory && p.subcategory)
+      .map(p => p.subcategory as string);
+    return Array.from(new Set(subs));
+  }, [selectedCategory]);
 
   const FilterSidebar = () => (
-    <div className="space-y-8">
-      {/* Categories */}
-      <div>
-        <h3 className="text-xs uppercase tracking-[0.2em] mb-4 text-muted-foreground">
-          Category
-        </h3>
-        <ul className="space-y-2">
-          {categories.map(category => (
-            <li key={category}>
-              <button
-                onClick={() => setSelectedCategory(category)}
-                className={cn(
-                  "text-sm transition-colors",
-                  selectedCategory === category
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {category}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="space-y-8 bg-card border border-border px-6 py-6 shadow-soft md:sticky md:top-28">
+      {/* Categories - only show when viewing all products */}
+      {selectedCategory === 'All' && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] mb-4 text-foreground">
+            Category
+          </h3>
+          <ul className="space-y-2">
+            {categories.map(category => (
+              <li key={category}>
+                <button
+                  onClick={() => setSelectedCategory(category)}
+                  className={cn(
+                    "text-sm transition-colors",
+                    selectedCategory === category
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {category}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Price Range */}
-      <div>
-        <h3 className="text-xs uppercase tracking-[0.2em] mb-4 text-muted-foreground">
+      <div className={cn(
+        "pt-4 mt-2",
+        selectedCategory === 'All' ? 'border-t border-border/60' : ''
+      )}>
+        <h3 className="text-xs font-semibold uppercase tracking-[0.2em] mb-4 text-foreground">
           Price
         </h3>
         <ul className="space-y-2">
@@ -113,6 +142,45 @@ const Shop = () => {
           ))}
         </ul>
       </div>
+
+      {/* Subcategories */}
+      {selectedCategory !== 'All' && availableSubcategories.length > 0 && (
+        <div className="pt-4 border-t border-border/60 mt-2">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] mb-4 text-foreground">
+            Subcategories
+          </h3>
+          <ul className="space-y-2">
+            <li>
+              <button
+                onClick={() => setSelectedSubcategory('All')}
+                className={cn(
+                  "text-sm transition-colors",
+                  selectedSubcategory === 'All'
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                All
+              </button>
+            </li>
+            {availableSubcategories.map(sub => (
+              <li key={sub}>
+                <button
+                  onClick={() => setSelectedSubcategory(sub)}
+                  className={cn(
+                    "text-sm transition-colors",
+                    selectedSubcategory === sub
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {sub}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 

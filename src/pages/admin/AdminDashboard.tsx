@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
+import { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -69,6 +70,21 @@ const ordersData = [
 ];
 
 const AdminDashboard = () => {
+  const [recentOrders, setRecentOrders] = useState(
+    [
+      { id: '#1234', customer: 'Emma Watson', status: 'Delivered', total: 2450 },
+      { id: '#1235', customer: 'John Smith', status: 'Processing', total: 1890 },
+      { id: '#1236', customer: 'Sarah Connor', status: 'Shipped', total: 3200 },
+      { id: '#1237', customer: 'Mike Johnson', status: 'Pending', total: 980 },
+    ] as { id: string; customer: string; status: string; total: number }[]
+  );
+
+  const handleDashboardStatusChange = (id: string, value: string) => {
+    setRecentOrders(prev =>
+      prev.map(order => (order.id === id ? { ...order, status: value } : order))
+    );
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -187,29 +203,30 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {[
-                { id: '#1234', customer: 'Emma Watson', status: 'Delivered', total: 2450 },
-                { id: '#1235', customer: 'John Smith', status: 'Processing', total: 1890 },
-                { id: '#1236', customer: 'Sarah Connor', status: 'Shipped', total: 3200 },
-                { id: '#1237', customer: 'Mike Johnson', status: 'Pending', total: 980 },
-              ].map(order => (
+              {recentOrders.map(order => (
                 <tr key={order.id} className="border-b border-border hover:bg-secondary/50">
                   <td className="py-4 px-4 font-medium">{order.id}</td>
                   <td className="py-4 px-4">{order.customer}</td>
                   <td className="py-4 px-4">
-                    <span
-                      className={`inline-block px-3 py-1 text-xs ${
-                        order.status === 'Delivered'
+                    <select
+                      value={order.status}
+                      onChange={e => handleDashboardStatusChange(order.id, e.target.value)}
+                      className={
+                        "text-xs px-2 py-1 rounded-none border border-transparent cursor-pointer " +
+                        (order.status === 'Delivered'
                           ? 'bg-green-100 text-green-700'
                           : order.status === 'Shipped'
                           ? 'bg-blue-100 text-blue-700'
                           : order.status === 'Processing'
                           ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
+                          : 'bg-gray-100 text-gray-700')
+                      }
                     >
-                      {order.status}
-                    </span>
+                      <option value="Pending">Pending</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                    </select>
                   </td>
                   <td className="py-4 px-4 text-right">${order.total.toLocaleString()}</td>
                 </tr>
