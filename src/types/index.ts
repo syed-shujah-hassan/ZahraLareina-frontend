@@ -9,6 +9,7 @@ export interface Product {
   sizes: string[];
   inStock: boolean;
   isNew?: boolean;
+  discount?: number;
 }
 
 export interface CartItem {

@@ -18,27 +18,30 @@ export const EditorialSection = () => {
 
           {/* Content */}
           <div className="lg:pl-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            <p className="text-luxury-subtitle mb-6">Our Philosophy</p>
-            <h2 className="font-serif text-4xl md:text-5xl tracking-wide mb-8 leading-tight">
+            <p className="text-luxury-subtitle mb-5 text-xs md:text-sm">Our Philosophy</p>
+            <h2 className="font-serif text-3xl md:text-5xl tracking-wide mb-7 md:mb-8 leading-tight">
               The Art of <br />
               <span className="text-primary">Timeless</span> Luxury
             </h2>
             
             <div className="gold-line mb-8" />
             
-            <p className="text-muted-foreground leading-relaxed mb-6">
+            <p className="text-muted-foreground leading-relaxed mb-5 text-sm md:text-base">
               At ZahraLareina, we believe that true luxury lies in the details. Each piece 
               in our collection is meticulously crafted by skilled artisans using the 
               finest materials sourced from around the world.
             </p>
             
-            <p className="text-muted-foreground leading-relaxed mb-10">
+            <p className="text-muted-foreground leading-relaxed mb-8 text-sm md:text-base">
               Our commitment to excellence extends beyond aesthetics—we create pieces 
               designed to be treasured for generations, blending traditional craftsmanship 
               with contemporary sensibility.
             </p>
 
-            <Link to="/about" className="btn-luxury">
+            <Link
+              to="/about"
+              className="inline-flex items-center justify-center px-6 py-3 border border-foreground/70 bg-transparent text-foreground text-xs md:text-sm uppercase tracking-[0.2em] font-medium hover:bg-foreground hover:text-background transition-colors duration-300"
+            >
               <span>Discover Our Story</span>
             </Link>
           </div>

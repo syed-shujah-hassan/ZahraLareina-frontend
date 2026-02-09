@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { products as initialProducts, categories as initialCategories } from '@/data/products';
+import { uploadImageToCloudinary } from '@/lib/cloudinary';
 
 interface AdminCategory {
   id: string;
@@ -17,140 +17,350 @@ interface FeaturedState {
   priority: number;
 }
 
+interface LandingProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  images: string[];
+  isFeatured?: boolean;
+  featuredPriority?: number;
+}
+
 const AdminLandingPageManagement = () => {
-  // Seed some demo categories from existing data so UI feels connected
-  const [categories, setCategories] = useState<AdminCategory[]>([
-    {
-      id: 'cat-bags',
-      name: 'Bags',
-      image: '',
-      showInMenu: true,
-      showOnHome: true,
-      subcategories: [
-        { id: 'sub-clutches', name: 'Clutches' },
-        { id: 'sub-totes', name: 'Totes' },
-        { id: 'sub-crossbody', name: 'Crossbody' },
-      ],
-    },
-    {
-      id: 'cat-shoes',
-      name: 'Shoes',
-      image: '',
-      showInMenu: true,
-      showOnHome: true,
-      subcategories: [
-        { id: 'sub-heels', name: 'Heels' },
-        { id: 'sub-loafers', name: 'Loafers' },
-        { id: 'sub-sandals', name: 'Sandals' },
-      ],
-    },
-    {
-      id: 'cat-accessories',
-      name: 'Accessories',
-      image: '',
-      showInMenu: true,
-      showOnHome: false,
-      subcategories: [
-        { id: 'sub-necklaces', name: 'Necklaces' },
-        { id: 'sub-scarves', name: 'Scarves' },
-      ],
-    },
-  ]);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [products, setProducts] = useState<LandingProduct[]>([]);
+
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+        if (!token) {
+          setError('Not authorized');
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/admin/categories`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to load categories');
+        }
+
+        const mapped: AdminCategory[] = data.categories.map((c: any) => ({
+          id: c._id,
+          name: c.name,
+          image: c.image || '',
+          showInMenu: !!c.showInMenu,
+          showOnHome: !!c.showOnHome,
+          subcategories: (c.subcategories || []).map((s: any, index: number) => ({
+            id: `${c._id}-sub-${index}`,
+            name: s.name,
+          })),
+        }));
+
+        setCategories(mapped);
+        if (mapped.length > 0) {
+          setSelectedCategoryId(mapped[0].id);
+        }
+
+        // Load products for featured management
+        const prodRes = await fetch(`${API_BASE}/api/admin/products`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const prodData = await prodRes.json();
+        if (!prodRes.ok || !prodData.success) {
+          throw new Error(prodData.message || 'Failed to load products');
+        }
+
+        const mappedProducts: LandingProduct[] = prodData.products.map((p: any, index: number) => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          category: p.category,
+          images: p.images || [],
+          isFeatured: !!p.isFeatured,
+          featuredPriority:
+            typeof p.featuredPriority === 'number' ? p.featuredPriority : index + 1,
+        }));
+
+        setProducts(mappedProducts);
+        setFeatured(
+          mappedProducts.map(p => ({
+            productId: p.id,
+            featured: !!p.isFeatured,
+            priority:
+              typeof p.featuredPriority === 'number' ? p.featuredPriority! : 0,
+          }))
+        );
+      } catch (err: any) {
+        setError(err.message || 'Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(categories[0]?.id ?? null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
 
-  const [featured, setFeatured] = useState<FeaturedState[]>(() =>
-    initialProducts.map((p, index) => ({
-      productId: p.id,
-      featured: index < 4,
-      priority: index + 1,
-    }))
-  );
+  const [featured, setFeatured] = useState<FeaturedState[]>([]);
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
-    const id = `cat-${Date.now()}`;
-    setCategories(prev => [
-      ...prev,
-      {
-        id,
-        name: newCategoryName.trim(),
-        image: '',
-        showInMenu: true,
-        showOnHome: false,
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      const res = await fetch(`${API_BASE}/api/admin/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to create category');
+      }
+
+      const c = data.category;
+      const mapped: AdminCategory = {
+        id: c._id,
+        name: c.name,
+        image: c.image || '',
+        showInMenu: !!c.showInMenu,
+        showOnHome: !!c.showOnHome,
         subcategories: [],
-      },
-    ]);
-    setNewCategoryName('');
-    setSelectedCategoryId(id);
+      };
+      setCategories(prev => [...prev, mapped]);
+      setNewCategoryName('');
+      setSelectedCategoryId(mapped.id);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create category');
+    }
   };
 
-  const handleToggleCategoryFlag = (id: string, key: 'showInMenu' | 'showOnHome') => {
-    setCategories(prev =>
-      prev.map(cat => (cat.id === id ? { ...cat, [key]: !cat[key] } : cat))
-    );
+  const handleToggleCategoryFlag = async (id: string, key: 'showInMenu' | 'showOnHome') => {
+    const existing = categories.find(c => c.id === id);
+    if (!existing) return;
+    const nextValue = !existing[key];
+
+    setCategories(prev => prev.map(cat => (cat.id === id ? { ...cat, [key]: nextValue } : cat)));
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      await fetch(`${API_BASE}/api/admin/categories/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ [key]: nextValue }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleCategoryImageFileChange = (id: string, file: File | undefined | null) => {
+  const handleCategoryImageFileChange = async (id: string, file: File | undefined | null) => {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setCategories(prev => prev.map(cat => (cat.id === id ? { ...cat, image: url } : cat)));
+
+    try {
+      const url = await uploadImageToCloudinary(file);
+
+      setCategories(prev => prev.map(cat => (cat.id === id ? { ...cat, image: url } : cat)));
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      await fetch(`${API_BASE}/api/admin/categories/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ image: url }),
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload category image');
+    }
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
 
-    setCategories(prev => prev.filter(cat => cat.id !== id));
+      const res = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to delete category');
+      }
 
-    setSelectedCategoryId(current => (current === id ? null : current));
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+      setSelectedCategoryId(current => (current === id ? null : current));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete category');
+    }
   };
 
-  const handleAddSubcategory = () => {
+  const handleAddSubcategory = async () => {
     if (!newSubcategoryName.trim() || !selectedCategoryId) return;
-    setCategories(prev =>
-      prev.map(cat =>
-        cat.id === selectedCategoryId
-          ? {
-              ...cat,
-              subcategories: [
-                ...cat.subcategories,
-                { id: `sub-${Date.now()}`, name: newSubcategoryName.trim() },
-              ],
-            }
-          : cat
-      )
-    );
-    setNewSubcategoryName('');
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      // find index of selected category to map subIndex later if needed
+      const catIndex = categories.findIndex(c => c.id === selectedCategoryId);
+
+      const res = await fetch(`${API_BASE}/api/admin/categories/${selectedCategoryId}/subcategories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newSubcategoryName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to add subcategory');
+      }
+
+      const c = data.category;
+      const mappedSubcategories = (c.subcategories || []).map((s: any, index: number) => ({
+        id: `${c._id}-sub-${index}`,
+        name: s.name,
+      }));
+
+      setCategories(prev =>
+        prev.map(cat =>
+          cat.id === c._id
+            ? {
+                ...cat,
+                subcategories: mappedSubcategories,
+              }
+            : cat
+        )
+      );
+
+      setNewSubcategoryName('');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add subcategory');
+    }
   };
 
-  const handleRemoveSubcategory = (categoryId: string, subId: string) => {
+  const handleRemoveSubcategory = async (categoryId: string, subId: string) => {
+    const cat = categories.find(c => c.id === categoryId);
+    if (!cat) return;
+
+    const subIndex = cat.subcategories.findIndex(s => s.id === subId);
+    if (subIndex === -1) return;
+
     setCategories(prev =>
-      prev.map(cat =>
-        cat.id === categoryId
+      prev.map(c =>
+        c.id === categoryId
           ? {
-              ...cat,
-              subcategories: cat.subcategories.filter(s => s.id !== subId),
+              ...c,
+              subcategories: c.subcategories.filter(s => s.id !== subId),
             }
-          : cat
+          : c
       )
     );
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      await fetch(`${API_BASE}/api/admin/categories/${categoryId}/subcategories/${subIndex}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleToggleFeatured = (productId: string) => {
+  const handleToggleFeatured = async (productId: string) => {
+    const current = featured.find(f => f.productId === productId);
+    const nextValue = !current?.featured;
+
     setFeatured(prev =>
       prev.map(f =>
-        f.productId === productId ? { ...f, featured: !f.featured } : f
+        f.productId === productId ? { ...f, featured: nextValue } : f
       )
     );
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      await fetch(`${API_BASE}/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isFeatured: nextValue }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handlePriorityChange = (productId: string, value: string) => {
+  const handlePriorityChange = async (productId: string, value: string) => {
     const num = parseInt(value || '0', 10) || 0;
     setFeatured(prev =>
       prev.map(f => (f.productId === productId ? { ...f, priority: num } : f))
     );
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) return;
+
+      await fetch(`${API_BASE}/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ featuredPriority: num }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const selectedCategory = categories.find(cat => cat.id === selectedCategoryId) ?? null;
@@ -430,8 +640,13 @@ const AdminLandingPageManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {initialProducts.map(product => {
-                const state = featured.find(f => f.productId === product.id)!;
+              {products.map(product => {
+                const state =
+                  featured.find(f => f.productId === product.id) || {
+                    productId: product.id,
+                    featured: !!product.isFeatured,
+                    priority: product.featuredPriority ?? 0,
+                  };
                 return (
                   <tr
                     key={product.id}

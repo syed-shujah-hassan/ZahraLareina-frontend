@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { cn } from "@/lib/utils";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
 
 const statusColors: Record<string, string> = {
   pending: "bg-muted text-foreground",
@@ -10,71 +11,91 @@ const statusColors: Record<string, string> = {
   delivered: "bg-green-100 text-green-800",
 };
 
-const mockOrders = [
-  {
-    id: "ZL-1001",
-    date: "January 15, 2024",
-    status: "delivered",
-    total: 1850,
-    items: [
-      {
-        name: "Velvet Evening Clutch",
-        size: "One Size",
-        quantity: 1,
-        price: 1850,
-        image:
-          "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80",
-      },
-    ],
-  },
-  {
-    id: "ZL-1002",
-    date: "January 12, 2024",
-    status: "shipped",
-    total: 1290,
-    items: [
-      {
-        name: "Strappy Stiletto Heel",
-        size: "38",
-        quantity: 1,
-        price: 1290,
-        image:
-          "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80",
-      },
-    ],
-  },
-  {
-    id: "ZL-1003",
-    date: "January 5, 2024",
-    status: "processing",
-    total: 890,
-    items: [
-      {
-        name: "Gold Chain Necklace",
-        size: "One Size",
-        quantity: 1,
-        price: 890,
-        image:
-          "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80",
-      },
-    ],
-  },
-];
+type OrderItemUI = {
+  name: string;
+  size: string;
+  quantity: number;
+  price: number;
+  image: string;
+};
+
+type OrderUI = {
+  id: string;
+  date: string;
+  status: keyof typeof statusColors;
+  total: number;
+  items: OrderItemUI[];
+};
 
 const MyOrdersPage = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const totalOrders = mockOrders.length;
-  const lastOrder = mockOrders[0];
-  const activeOrders = mockOrders.filter((o) => o.status !== "delivered").length;
+  const [orders, setOrders] = useState<OrderUI[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { formatPrice } = useStoreSettings();
 
   const isLoggedIn =
     typeof window !== "undefined" &&
-    localStorage.getItem("isLoggedIn") === "true";
+    !!localStorage.getItem("authToken");
 
   if (!isLoggedIn) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/signin" replace state={{ from: "/orders" }} />;
   }
+
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || "http://localhost:5000";
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+        if (!token) {
+          setError("Not authorized");
+          setIsLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/orders/mine`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Failed to load orders");
+        }
+
+        const mapped: OrderUI[] = (data.orders || []).map((o: any) => ({
+          id: o.orderNumber || o._id,
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "",
+          status: (o.status || "pending") as keyof typeof statusColors,
+          total: o.total || 0,
+          items: (o.items || []).map((it: any) => ({
+            name: it.name,
+            size: it.size,
+            quantity: it.quantity,
+            price: it.price,
+            image: it.image,
+          })),
+        }));
+
+        setOrders(mapped);
+      } catch (err: any) {
+        setError(err.message || "Failed to load orders");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    run();
+  }, [API_BASE]);
+
+  const totalOrders = orders.length;
+  const lastOrder = orders[0];
+  const activeOrders = orders.filter((o) => o.status !== "delivered").length;
 
   return (
     <Layout>
@@ -95,7 +116,7 @@ const MyOrdersPage = () => {
           </div>
 
           {/* Stats Strip */}
-          {mockOrders.length > 0 && (
+          {orders.length > 0 && lastOrder && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 stagger-children">
               <div className="admin-card text-center">
                 <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">
@@ -119,18 +140,26 @@ const MyOrdersPage = () => {
             </div>
           )}
 
-          {mockOrders.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-24 animate-fade-up">
+              <p className="text-muted-foreground mb-4">Loading your orders...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-24 animate-fade-up">
+              <p className="text-destructive mb-4 text-sm">{error}</p>
+            </div>
+          ) : orders.length === 0 ? (
             <div className="text-center py-24 animate-fade-up">
               <p className="text-muted-foreground mb-4">
                 You have no orders yet.
               </p>
-              <button className="btn-luxury">
+              <Link to="/shop" className="btn-luxury inline-flex items-center justify-center">
                 <span>Start Shopping</span>
-              </button>
+              </Link>
             </div>
           ) : (
             <div className="space-y-8">
-              {mockOrders.map((order, index) => (
+              {orders.map((order, index) => (
                 <div
                   key={order.id}
                   className="bg-card border border-border p-6 md:p-8 shadow-soft hover:shadow-luxury transition-shadow animate-fade-up"
@@ -163,7 +192,7 @@ const MyOrdersPage = () => {
                           Total
                         </p>
                         <p className="font-serif text-xl">
-                          ${order.total.toLocaleString()}
+                          {formatPrice(order.total)}
                         </p>
                       </div>
                     </div>
@@ -188,8 +217,8 @@ const MyOrdersPage = () => {
                           <p className="text-sm text-muted-foreground">
                             Size: {item.size} • Qty: {item.quantity}
                           </p>
-                          <p className="text-sm mt-1">
-                            ${(item.price * item.quantity).toLocaleString()}
+                          <p className="font-medium">
+                            {formatPrice(item.price)} x {item.quantity}
                           </p>
                         </div>
                       </div>

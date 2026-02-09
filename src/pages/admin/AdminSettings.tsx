@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const themes = [
@@ -8,14 +8,87 @@ const themes = [
 ];
 
 const AdminSettings = () => {
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
+
   const [storeName, setStoreName] = useState('ZahraLareina');
   const [selectedTheme, setSelectedTheme] = useState(0);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('PKR');
   const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+        if (!token) {
+          setError('Not authorized');
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/admin/settings`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to load settings');
+        }
+
+        const s = data.settings || {};
+        if (s.storeName) setStoreName(s.storeName);
+        if (typeof s.themeIndex === 'number') setSelectedTheme(s.themeIndex);
+        if (s.currency) setCurrency(s.currency);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load settings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [API_BASE]);
+
+  const handleSave = async () => {
+    try {
+      setIsSaved(false);
+      setError('');
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) {
+        setError('Not authorized');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          storeName,
+          currency,
+          themeIndex: selectedTheme,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to save settings');
+      }
+
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save settings');
+    }
   };
 
   return (
@@ -25,6 +98,13 @@ const AdminSettings = () => {
         <h1 className="font-serif text-3xl tracking-wide mb-2">Settings</h1>
         <p className="text-muted-foreground">Customize your store settings</p>
       </div>
+
+      {/* Error / Loading */}
+      {loading ? (
+        <div className="admin-card py-4 text-sm text-muted-foreground">Loading settings...</div>
+      ) : error ? (
+        <div className="admin-card py-4 text-sm text-destructive">{error}</div>
+      ) : null}
 
       {/* Store Settings */}
       <div className="admin-card space-y-6">
@@ -51,6 +131,7 @@ const AdminSettings = () => {
             onChange={e => setCurrency(e.target.value)}
             className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
           >
+            <option value="PKR">PKR (Rs)</option>
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
             <option value="GBP">GBP (£)</option>

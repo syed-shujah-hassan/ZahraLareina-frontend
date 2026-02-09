@@ -1,18 +1,106 @@
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { signInWithGooglePopup } from "@/lib/firebase";
+import { Eye, EyeOff } from "lucide-react";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || "http://localhost:5000";
+
+  const state = location.state as { from?: string } | null;
+  const redirectTo = state?.from || "/";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("authToken")) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [navigate, redirectTo]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("isLoggedIn", "true");
+    const run = async () => {
+      try {
+        setIsSubmitting(true);
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Unable to sign in");
+        }
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("authToken", data.token);
+          if (data.user?.email) {
+            localStorage.setItem("userEmail", data.user.email);
+          } else {
+            localStorage.setItem("userEmail", email.toLowerCase());
+          }
+        }
+
+        navigate(redirectTo);
+      } catch (err: any) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+    run();
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    try {
+      setIsSubmitting(true);
+      const cred = await signInWithGooglePopup();
+      const displayName = cred.user.displayName || "";
+      const email = cred.user.email || "";
+      const googleId = cred.user.uid;
+
+      // Sync / create user in our backend and get a JWT for protected APIs
+      const res = await fetch(`${API_BASE}/api/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fullName: displayName, email, googleId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Google sign-in failed");
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("authToken", data.token);
+        if (data.user?.email) {
+          localStorage.setItem("userEmail", data.user.email.toLowerCase());
+        }
+      }
+
+      navigate(redirectTo);
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    navigate("/orders");
   };
   return (
     <Layout hideFooter>
@@ -26,15 +114,20 @@ const SignIn = () => {
             Enter your details to access your orders and saved items.
           </p>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit} autoComplete="off">
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Email
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
                 placeholder="you@example.com"
+                autoComplete="email"
+                name="signin-email"
+                required
               />
             </div>
 
@@ -42,12 +135,33 @@ const SignIn = () => {
               <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Password
               </label>
-              <input
-                type="password"
-                className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-border bg-background px-4 py-3 pr-10 text-sm outline-none focus:border-foreground transition-colors"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  name="signin-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
+
+            {error && (
+              <p className="text-xs text-destructive">
+                {error}
+              </p>
+            )}
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -57,6 +171,7 @@ const SignIn = () => {
               <button
                 type="button"
                 className="luxury-underline text-[11px] tracking-[0.2em] uppercase"
+                onClick={() => navigate('/forgot-password')}
               >
                 Forgot password
               </button>
@@ -65,6 +180,7 @@ const SignIn = () => {
             {/* Continue with Google */}
             <button
               type="button"
+              onClick={handleGoogleSignIn}
               className="w-full mt-6 border border-border bg-background/60 hover:bg-background flex items-center justify-center gap-3 py-3 text-sm transition-all duration-300 hover:-translate-y-[1px] hover:shadow-luxury"
             >
               <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
@@ -96,8 +212,12 @@ const SignIn = () => {
               </span>
             </button>
 
-            <button type="submit" className="w-full btn-luxury mt-4">
-              <span>Sign In</span>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full btn-luxury mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span>{isSubmitting ? "Signing In..." : "Sign In"}</span>
             </button>
           </form>
 

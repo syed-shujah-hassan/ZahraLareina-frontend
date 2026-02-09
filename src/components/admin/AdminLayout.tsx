@@ -10,6 +10,7 @@ import {
   X,
   ChevronLeft,
   Layers,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const adminLinks = [
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { label: 'Customers', href: '/admin/customers', icon: Users },
   { label: 'Landing Page', href: '/admin/landing', icon: Layers },
+   { label: 'Contact Messages', href: '/admin/contact-messages', icon: Mail },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

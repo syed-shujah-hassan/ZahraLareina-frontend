@@ -1,55 +1,83 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Customer } from '@/types';
 import { cn } from '@/lib/utils';
 
-const mockCustomers: Customer[] = [
-  {
-    id: '1',
-    name: 'Emma Watson',
-    email: 'emma@example.com',
-    ordersCount: 5,
-    status: 'active',
-    joinDate: '2023-06-15',
-  },
-  {
-    id: '2',
-    name: 'John Smith',
-    email: 'john@example.com',
-    ordersCount: 3,
-    status: 'active',
-    joinDate: '2023-08-22',
-  },
-  {
-    id: '3',
-    name: 'Sarah Connor',
-    email: 'sarah@example.com',
-    ordersCount: 8,
-    status: 'active',
-    joinDate: '2023-03-10',
-  },
-  {
-    id: '4',
-    name: 'Mike Johnson',
-    email: 'mike@example.com',
-    ordersCount: 1,
-    status: 'inactive',
-    joinDate: '2023-11-05',
-  },
-  {
-    id: '5',
-    name: 'Lisa Anderson',
-    email: 'lisa@example.com',
-    ordersCount: 12,
-    status: 'active',
-    joinDate: '2022-12-01',
-  },
-];
+const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const AdminCustomers = () => {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleStatusChange = (id: string, status: Customer['status']) => {
-    setCustomers(prev => prev.map(c => (c.id === id ? { ...c, status } : c)));
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+        if (!token) {
+          setError('Not authorized');
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/admin/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to load customers');
+        }
+
+        const mapped: Customer[] = data.users.map((u: any) => ({
+          id: u.id,
+          name: u.fullName || u.email,
+          email: u.email,
+          ordersCount: typeof u.ordersCount === 'number' ? u.ordersCount : 0,
+          status: (u.status as Customer['status']) || 'active',
+          joinDate: u.createdAt ? u.createdAt.substring(0, 10) : '',
+        }));
+
+        setCustomers(mapped);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load customers');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+  }, []);
+
+  const handleStatusChange = async (id: string, status: Customer['status']) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      if (!token) {
+        setError('Not authorized');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/admin/users/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to update status');
+      }
+
+      setCustomers(prev => prev.map(c => (c.id === id ? { ...c, status } : c)));
+    } catch (err: any) {
+      setError(err.message || 'Failed to update status');
+    }
   };
 
   return (
@@ -88,6 +116,11 @@ const AdminCustomers = () => {
 
       {/* Customers Table */}
       <div className="admin-card overflow-x-auto">
+        {loading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">Loading customers...</div>
+        ) : error ? (
+          <div className="py-8 text-center text-sm text-destructive">{error}</div>
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -132,6 +165,7 @@ const AdminCustomers = () => {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </div>
   );

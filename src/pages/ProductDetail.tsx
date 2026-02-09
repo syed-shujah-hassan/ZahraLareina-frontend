@@ -1,27 +1,106 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
-import { products } from '@/data/products';
 import { useCart } from '@/context/CartContext';
-import { Heart, Minus, Plus, ChevronLeft } from 'lucide-react';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { Heart, Minus, Plus, ChevronLeft, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Product } from '@/types';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const product = products.find(p => p.id === id);
   const { addToCart, toggleSavedItem, isSaved } = useCart();
-  
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [sizeError, setSizeError] = useState(false);
+  const { formatPrice } = useStoreSettings();
 
-  if (!product) {
+  useEffect(() => {
+    const loadProduct = async () => {
+      if (!id) return;
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const res = await fetch(`${API_BASE}/api/products/${id}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setError(data.message || 'Failed to load product');
+          return;
+        }
+
+        const p = data.product;
+        const mapped: Product = {
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          category: p.category,
+          subcategory: p.subcategory,
+          images: p.images || [],
+          description: p.description,
+          sizes: p.sizes || [],
+          inStock: p.inStock,
+          isNew: p.isNew,
+          discount: p.discount,
+        };
+        setProduct(mapped);
+
+        // Load related products from same category (simple version)
+        const relRes = await fetch(`${API_BASE}/api/products?category=${encodeURIComponent(p.category)}`);
+        const relData = await relRes.json();
+        if (relRes.ok && relData.success) {
+          const relMapped: Product[] = (relData.products as any[])
+            .filter((rp: any) => String(rp._id) !== String(p._id))
+            .slice(0, 4)
+            .map((rp: any) => ({
+              id: rp._id,
+              name: rp.name,
+              price: rp.price,
+              category: rp.category,
+              subcategory: rp.subcategory,
+              images: rp.images || [],
+              description: rp.description,
+              sizes: rp.sizes || [],
+              inStock: rp.inStock,
+              isNew: rp.isNew,
+              discount: rp.discount,
+            }));
+          setRelatedProducts(relMapped);
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load product');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [API_BASE, id]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="pt-32 pb-24 px-6 text-center">
+          <p className="text-muted-foreground">Loading product...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !product) {
     return (
       <Layout>
         <div className="pt-32 pb-24 px-6 text-center">
           <h1 className="font-serif text-3xl mb-4">Product not found</h1>
+          {error && <p className="text-destructive mb-4">{error}</p>}
           <Link to="/shop" className="text-primary hover:underline">
             Return to Shop
           </Link>
@@ -31,9 +110,6 @@ const ProductDetail = () => {
   }
 
   const saved = isSaved(product.id);
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
 
   const handleAddToCart = () => {
     if (!selectedSize && product.sizes.length > 1) {
@@ -60,15 +136,15 @@ const ProductDetail = () => {
             Back to Shop
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
             {/* Image Gallery */}
-            <div className="space-y-4">
+            <div className="flex flex-col space-y-4 h-full">
               {/* Main Image */}
-              <div className="aspect-[3/4] bg-secondary overflow-hidden">
+              <div className="flex-1 overflow-hidden mx-auto max-w-lg flex items-center justify-center">
                 <img
                   src={product.images[selectedImage]}
                   alt={product.name}
-                  className="w-full h-full object-cover animate-fade-in"
+                  className="w-full h-auto max-h-[640px] object-contain animate-fade-in"
                 />
               </div>
               
@@ -108,9 +184,22 @@ const ProductDetail = () => {
               <h1 className="font-serif text-3xl md:text-4xl tracking-wide mb-2">
                 {product.name}
               </h1>
-              <p className="text-xl text-muted-foreground mb-6">
-                ${product.price.toLocaleString()}
-              </p>
+              <div className="text-xl mb-6">
+                {typeof product.discount === 'number' && product.discount > 0 && product.discount < product.price ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground line-through">
+                      {formatPrice(product.price)}
+                    </span>
+                    <span className="font-semibold">
+                      {formatPrice(product.discount)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {formatPrice(product.price)}
+                  </span>
+                )}
+              </div>
 
               {/* Gold Line */}
               <div className="gold-line mb-6" />
@@ -210,29 +299,49 @@ const ProductDetail = () => {
                   <span className="text-muted-foreground">Category</span>
                   <span>{product.category}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Availability</span>
                   <span className={product.inStock ? "text-green-600" : "text-destructive"}>
                     {product.inStock ? "In Stock" : "Out of Stock"}
                   </span>
+                </div>
+
+                {/* Reassurance points */}
+                <div className="pt-4 flex flex-col gap-2 text-xs md:text-sm">
+                  <div className="flex items-center gap-2 text-emerald-600">
+                    <CheckCircle size={16} className="flex-shrink-0" />
+                    <span className="uppercase tracking-[0.18em]">
+                      Timely dispatch from Zahra studio
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-600">
+                    <CheckCircle size={16} className="flex-shrink-0" />
+                    <span className="uppercase tracking-[0.18em]">
+                      Signature luxury packaging & care
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Related Products */}
-          {relatedProducts.length > 0 && (
-            <section className="mt-24">
-              <div className="text-center mb-12">
-                <h2 className="font-serif text-3xl tracking-wide">You May Also Like</h2>
-              </div>
+          <section className="mt-24">
+            <div className="text-center mb-12">
+              <h2 className="font-serif text-3xl tracking-wide">You May Also Like</h2>
+            </div>
+            {relatedProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {relatedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No related products found.
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </Layout>

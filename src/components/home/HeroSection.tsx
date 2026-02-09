@@ -24,7 +24,7 @@ export const HeroSection = () => {
 
       {/* Content */}
       <div 
-        className="relative z-10 text-center px-6"
+        className="relative z-10 text-center px-6 pt-10 md:pt-16"
         style={{
           opacity,
           transform: `translateY(${translateY}px)`,
@@ -36,13 +36,17 @@ export const HeroSection = () => {
         </p>
 
         {/* Brand Name */}
-        <h1 
+        <h1
           className={cn(
-            "text-luxury-display mb-8 animate-fade-up",
+            'font-serif mb-8 animate-fade-up uppercase tracking-[0.35em] text-4xl md:text-6xl',
           )}
           style={{ animationDelay: '0.2s' }}
         >
-          ZahraLareina
+          ZAHRA
+          <br />
+          <span className="block mt-3 text-[0.6em] md:text-[0.55em] tracking-[0.5em]">
+            LA REINA
+          </span>
         </h1>
 
         {/* Gold Line */}
@@ -72,16 +76,6 @@ export const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div 
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-up"
-        style={{ animationDelay: '0.8s', opacity }}
-      >
-        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Scroll</span>
-        <div className="w-px h-12 bg-border relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1/2 bg-foreground animate-bounce" />
-        </div>
-      </div>
     </section>
   );
 };

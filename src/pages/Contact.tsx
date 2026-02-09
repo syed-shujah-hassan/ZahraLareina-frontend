@@ -1,6 +1,62 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 
 const Contact = () => {
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  const [fullName, setFullName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+
+    if (!storedEmail) {
+      setError("Please sign in to send a message.");
+      setSuccess("");
+      return;
+    }
+
+    if (!fullName || !subject || !message) {
+      setError("Please fill in all fields.");
+      setSuccess("");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
+
+      const res = await fetch(`${API_BASE}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fullName, email: storedEmail, subject, message }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to send message');
+      }
+
+      setSuccess("Your message has been sent. We'll get back to you soon.");
+      setFullName("");
+      setSubject("");
+      setMessage("");
+    } catch (err: any) {
+      setError(err.message || "Failed to send message. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="pt-32 pb-24 px-6 bg-background">
@@ -54,28 +110,18 @@ const Contact = () => {
             {/* Contact Form */}
             <div className="lg:col-span-2 animate-fade-up">
               <div className="bg-card border border-border px-8 py-10 shadow-soft">
-                <form className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
-                        placeholder="you@example.com"
-                      />
-                    </div>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
+                      placeholder="Your name"
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -84,6 +130,8 @@ const Contact = () => {
                     </label>
                     <input
                       type="text"
+                      value={subject}
+                      onChange={e => setSubject(e.target.value)}
                       className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
                       placeholder="How may we assist you?"
                     />
@@ -95,6 +143,8 @@ const Contact = () => {
                     </label>
                     <textarea
                       rows={5}
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
                       className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors resize-none"
                       placeholder="Share details about your request, order, or styling question."
                     />
@@ -106,8 +156,15 @@ const Contact = () => {
                     </p>
                   </div>
 
-                  <button type="submit" className="w-full md:w-auto btn-luxury mt-4">
-                    <span>Send Message</span>
+                  {(error || success) && (
+                    <div className="text-sm mt-2">
+                      {error && <p className="text-destructive">{error}</p>}
+                      {success && <p className="text-emerald-600">{success}</p>}
+                    </div>
+                  )}
+
+                  <button type="submit" className="w-full md:w-auto btn-luxury mt-4" disabled={submitting}>
+                    <span>{submitting ? 'Sending...' : 'Send Message'}</span>
                   </button>
                 </form>
               </div>

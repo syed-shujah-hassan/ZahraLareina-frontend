@@ -2,16 +2,16 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
-import { products, categories } from '@/data/products';
 import { ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Product } from '@/types';
 
 const priceRanges = [
   { label: 'All Prices', min: 0, max: Infinity },
-  { label: 'Under $500', min: 0, max: 500 },
-  { label: '$500 - $1,000', min: 500, max: 1000 },
-  { label: '$1,000 - $2,000', min: 1000, max: 2000 },
-  { label: 'Over $2,000', min: 2000, max: Infinity },
+  { label: 'Under 500', min: 0, max: 500 },
+  { label: '500 - 1,000', min: 500, max: 1000 },
+  { label: '1,000 - 3,000', min: 1000, max: 3000 },
+  { label: 'Over 3,000', min: 3000, max: Infinity },
 ];
 
 const sortOptions = [
@@ -25,15 +25,42 @@ const Shop = () => {
   const initialCategory = searchParams.get('category') || 'All';
   const isNewFilter = searchParams.get('filter') === 'new';
   const initialSubcategory = searchParams.get('sub') || 'All';
+  const searchQuery = (searchParams.get('search') || '').trim();
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialSubcategory);
   const [selectedPriceRange, setSelectedPriceRange] = useState(priceRanges[0]);
   const [sortBy, setSortBy] = useState('newest');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [categoryList, setCategoryList] = useState<{ name: string; subcategories: string[] }[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState('');
+
+  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  // Only show price ranges that actually have products in them (except "All Prices" which is always shown)
+  const availablePriceRanges = useMemo(() => {
+    if (!products.length) return priceRanges;
+
+    return priceRanges.filter(range => {
+      if (range.label === 'All Prices') return true;
+      return products.some(p => p.price >= range.min && p.price <= range.max);
+    });
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
+
+    // Text search (from navbar search bar)
+    if (searchQuery) {
+      const lowered = searchQuery.toLowerCase();
+      result = result.filter(p => {
+        const name = p.name?.toLowerCase() || '';
+        const desc = p.description?.toLowerCase() || '';
+        return name.includes(lowered) || desc.includes(lowered);
+      });
+    }
 
     // Filter by new arrivals
     if (isNewFilter) {
@@ -69,7 +96,7 @@ const Shop = () => {
     }
 
     return result;
-  }, [selectedCategory, selectedSubcategory, selectedPriceRange, sortBy, isNewFilter]);
+  }, [products, selectedCategory, selectedSubcategory, selectedPriceRange, sortBy, isNewFilter, searchQuery]);
 
   // Keep selectedCategory and selectedSubcategory in sync with URL query
   // so that navigating directly to /shop?category=Bags&sub=Clutches
@@ -79,16 +106,79 @@ const Shop = () => {
     setSelectedSubcategory(initialSubcategory || 'All');
   }, [initialCategory, initialSubcategory]);
 
-  // Derive available subcategories for the current category
+  // Load categories from backend for filter sidebar and subcategories filter
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/categories`);
+        const data = await res.json();
+        if (!res.ok || !data.success) return;
+
+        const mapped = (data.categories as any[]).map(c => ({
+          name: c.name as string,
+          subcategories: ((c.subcategories || []) as any[]).map(s => s.name as string),
+        }));
+
+        setCategoryList(mapped);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    run();
+  }, [API_BASE]);
+
+  // Load products from backend
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoadingProducts(true);
+        setProductsError('');
+
+        const params = new URLSearchParams();
+        if (isNewFilter) params.set('isNew', 'true');
+
+        const res = await fetch(`${API_BASE}/api/products${params.toString() ? `?${params.toString()}` : ''}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setProductsError(data.message || 'Failed to load products');
+          return;
+        }
+
+        const mapped: Product[] = (data.products as any[]).map(p => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          category: p.category,
+          subcategory: p.subcategory,
+          images: p.images || [],
+          description: p.description,
+          sizes: p.sizes || [],
+          inStock: p.inStock,
+          isNew: p.isNew,
+          discount: p.discount,
+        }));
+
+        setProducts(mapped);
+      } catch (err) {
+        console.error(err);
+        setProductsError('Failed to load products');
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    loadProducts();
+  }, [API_BASE, isNewFilter]);
+
+  // Derive available subcategories for the current category from backend categories
   const availableSubcategories = useMemo(() => {
     if (selectedCategory === 'All') return [] as string[];
-    const subs = products
-      .filter(p => p.category === selectedCategory && p.subcategory)
-      .map(p => p.subcategory as string);
-    return Array.from(new Set(subs));
-  }, [selectedCategory]);
+    const found = categoryList.find(c => c.name === selectedCategory);
+    return found ? found.subcategories : [];
+  }, [selectedCategory, categoryList]);
 
-  const FilterSidebar = () => (
+  const FilterSidebar = ({ onFilterChange }: { onFilterChange?: () => void }) => (
     <div className="space-y-8 bg-card border border-border px-6 py-6 shadow-soft md:sticky md:top-28">
       {/* Categories - only show when viewing all products */}
       {selectedCategory === 'All' && (
@@ -97,18 +187,22 @@ const Shop = () => {
             Category
           </h3>
           <ul className="space-y-2">
-            {categories.map(category => (
-              <li key={category}>
+            {categoryList.map(category => (
+              <li key={category.name}>
                 <button
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => {
+                    setSelectedCategory(category.name);
+                    setSelectedSubcategory('All');
+                    onFilterChange?.();
+                  }}
                   className={cn(
                     "text-sm transition-colors",
-                    selectedCategory === category
+                    selectedCategory === category.name
                       ? "text-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {category}
+                  {category.name}
                 </button>
               </li>
             ))}
@@ -125,10 +219,13 @@ const Shop = () => {
           Price
         </h3>
         <ul className="space-y-2">
-          {priceRanges.map(range => (
+          {availablePriceRanges.map(range => (
             <li key={range.label}>
               <button
-                onClick={() => setSelectedPriceRange(range)}
+                onClick={() => {
+                  setSelectedPriceRange(range);
+                  onFilterChange?.();
+                }}
                 className={cn(
                   "text-sm transition-colors",
                   selectedPriceRange.label === range.label
@@ -152,7 +249,10 @@ const Shop = () => {
           <ul className="space-y-2">
             <li>
               <button
-                onClick={() => setSelectedSubcategory('All')}
+                onClick={() => {
+                  setSelectedSubcategory('All');
+                  onFilterChange?.();
+                }}
                 className={cn(
                   "text-sm transition-colors",
                   selectedSubcategory === 'All'
@@ -166,7 +266,10 @@ const Shop = () => {
             {availableSubcategories.map(sub => (
               <li key={sub}>
                 <button
-                  onClick={() => setSelectedSubcategory(sub)}
+                  onClick={() => {
+                    setSelectedSubcategory(sub);
+                    onFilterChange?.();
+                  }}
                   className={cn(
                     "text-sm transition-colors",
                     selectedSubcategory === sub
@@ -189,9 +292,15 @@ const Shop = () => {
       <div className="pt-32 pb-24 px-6">
         <div className="container mx-auto">
           {/* Header */}
-          <div className="text-center mb-16">
-            <h1 className="font-serif text-4xl md:text-5xl tracking-wide mb-4">
-              {isNewFilter ? 'New Arrivals' : 'Shop All'}
+          <div className="text-center mb-16 px-4">
+            <h1 className="font-serif text-3xl md:text-5xl tracking-wide leading-tight break-words">
+              {isNewFilter
+                ? 'New Arrivals'
+                : selectedSubcategory !== 'All'
+                  ? selectedSubcategory
+                  : selectedCategory !== 'All'
+                    ? selectedCategory
+                    : 'Shop All'}
             </h1>
             <p className="text-muted-foreground">
               {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
@@ -241,8 +350,16 @@ const Shop = () => {
               </div>
 
               {/* Products Grid */}
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+              {isLoadingProducts ? (
+                <div className="text-center py-24">
+                  <p className="text-muted-foreground">Loading products...</p>
+                </div>
+              ) : productsError ? (
+                <div className="text-center py-24">
+                  <p className="text-destructive">{productsError}</p>
+                </div>
+              ) : filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-6 md:gap-8">
                   {filteredProducts.map((product, index) => (
                     <div
                       key={product.id}
@@ -267,23 +384,36 @@ const Shop = () => {
       {isMobileFilterOpen && (
         <>
           <div
-            className="fixed inset-0 bg-foreground/30 z-50"
+            className="fixed inset-0 bg-foreground/30 backdrop-blur-[2px] z-50 animate-fade-in"
             onClick={() => setIsMobileFilterOpen(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 bg-background z-50 p-6 animate-slide-up max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-serif text-xl">Filters</h2>
-              <button onClick={() => setIsMobileFilterOpen(false)}>
-                <X size={24} />
-              </button>
+          <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+            <div className="mx-auto max-w-md bg-background rounded-t-3xl border-t border-border shadow-medium max-h-[75vh] overflow-y-auto pb-6">
+              {/* Handle + Header */}
+              <div className="pt-4 px-6 pb-4 border-b border-border/60 flex flex-col items-center gap-3">
+                <div className="w-10 h-1.5 rounded-full bg-border/80" />
+                <div className="flex items-center justify-between w-full">
+                  <h2 className="font-serif text-lg tracking-wide">Filters</h2>
+                  <button
+                    onClick={() => setIsMobileFilterOpen(false)}
+                    className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+                    aria-label="Close filters"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="px-6 pt-4 space-y-6">
+                <FilterSidebar onFilterChange={() => setIsMobileFilterOpen(false)} />
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-full btn-luxury mt-2"
+                >
+                  <span>Apply Filters</span>
+                </button>
+              </div>
             </div>
-            <FilterSidebar />
-            <button
-              onClick={() => setIsMobileFilterOpen(false)}
-              className="w-full btn-luxury mt-8"
-            >
-              <span>Apply Filters</span>
-            </button>
           </div>
         </>
       )}
