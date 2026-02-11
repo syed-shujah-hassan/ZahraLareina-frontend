@@ -114,7 +114,7 @@ const SignIn = () => {
             Enter your details to access your orders and saved items.
           </p>
 
-          <form className="space-y-5" onSubmit={handleSubmit} autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-6 text-left">
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Email
@@ -122,7 +122,7 @@ const SignIn = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
                 placeholder="you@example.com"
                 autoComplete="email"
@@ -139,7 +139,7 @@ const SignIn = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="w-full border border-border bg-background px-4 py-3 pr-10 text-sm outline-none focus:border-foreground transition-colors"
                   placeholder="Enter your password"
                   autoComplete="current-password"
@@ -157,31 +157,27 @@ const SignIn = () => {
               </div>
             </div>
 
+            <div className="flex justify-end text-sm">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+              >
+                Forgot password
+              </button>
+            </div>
+
             {error && (
               <p className="text-xs text-destructive">
                 {error}
               </p>
             )}
 
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="accent-foreground" />
-                <span className="tracking-[0.18em] uppercase">Remember me</span>
-              </label>
-              <button
-                type="button"
-                className="luxury-underline text-[11px] tracking-[0.2em] uppercase"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Forgot password
-              </button>
-            </div>
-
             {/* Continue with Google */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="w-full mt-6 border border-border bg-background/60 hover:bg-background flex items-center justify-center gap-3 py-3 text-sm transition-all duration-300 hover:-translate-y-[1px] hover:shadow-luxury"
+              className="w-full mt-2 border border-border bg-background/60 hover:bg-background flex items-center justify-center gap-3 py-3 text-sm transition-all duration-300 hover:-translate-y-[1px] hover:shadow-luxury"
             >
               <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
                 <svg

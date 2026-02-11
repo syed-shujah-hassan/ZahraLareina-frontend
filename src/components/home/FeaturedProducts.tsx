@@ -76,7 +76,7 @@ export const FeaturedProducts = () => {
             {featuredProducts.map((product, index) => (
               <div
                 key={product.id}
-                className="animate-fade-up"
+                className="animate-fade-up sm:scale-100 scale-[1.03]"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <ProductCard product={product} />

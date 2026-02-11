@@ -169,7 +169,7 @@ const SignUp = () => {
           </p>
 
           {!isOtpStep ? (
-            <form className="space-y-5" onSubmit={handleSubmit} autoComplete="off">
+            <form className="space-y-5 text-left" onSubmit={handleSubmit} autoComplete="off">
               <div className="space-y-2">
                 <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Full Name
@@ -177,7 +177,7 @@ const SignUp = () => {
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={e => setFullName(e.target.value)}
                   className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
                   placeholder="Your name"
                   autoComplete="name"
@@ -193,7 +193,7 @@ const SignUp = () => {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
                   placeholder="you@example.com"
                   autoComplete="email"

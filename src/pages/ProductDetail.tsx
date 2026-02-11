@@ -125,8 +125,8 @@ const ProductDetail = () => {
 
   return (
     <Layout>
-      <div className="pt-28 pb-24 px-6">
-        <div className="container mx-auto">
+      <div className="pt-28 pb-24 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
           {/* Back Link */}
           <Link
             to="/shop"
@@ -136,11 +136,11 @@ const ProductDetail = () => {
             Back to Shop
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-stretch">
             {/* Image Gallery */}
             <div className="flex flex-col space-y-4 h-full">
               {/* Main Image */}
-              <div className="flex-1 overflow-hidden mx-auto max-w-lg flex items-center justify-center">
+              <div className="flex-1 overflow-hidden -mx-4 sm:mx-0 flex items-center justify-center">
                 <img
                   src={product.images[selectedImage]}
                   alt={product.name}
@@ -172,7 +172,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Product Info */}
-            <div className="lg:py-8">
+            <div className="lg:py-8 text-left">
               {/* Badge */}
               {product.isNew && (
                 <span className="inline-block text-xs uppercase tracking-[0.15em] bg-foreground text-background px-3 py-1 mb-4">
@@ -327,13 +327,15 @@ const ProductDetail = () => {
 
           {/* Related Products */}
           <section className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="font-serif text-3xl tracking-wide">You May Also Like</h2>
+            <div className="mb-8 text-center">
+              <h2 className="font-serif text-2xl md:text-3xl tracking-wide">You May Also Like</h2>
             </div>
             {relatedProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:overflow-visible">
                 {relatedProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <div key={product.id} className="min-w-[60%] max-w-xs sm:min-w-0 sm:max-w-none">
+                    <ProductCard product={product} />
+                  </div>
                 ))}
               </div>
             ) : (

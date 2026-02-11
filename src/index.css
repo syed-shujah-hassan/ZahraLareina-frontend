@@ -129,6 +129,22 @@
   }
 }
 
+/* Global scrollbar hidden (scroll still works) */
+html {
+  scrollbar-width: none;          /* Firefox */
+  scrollbar-color: transparent transparent;
+}
+
+body {
+  -ms-overflow-style: none;       /* IE/Edge legacy */
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                  /* Chrome, Safari, Edge */
+}
+
 @layer components {
   /* Luxury Button Variants */
   .btn-luxury {
