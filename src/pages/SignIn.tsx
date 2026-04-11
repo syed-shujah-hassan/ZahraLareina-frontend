@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signInWithGooglePopup } from "@/lib/firebase";
 import { Eye, EyeOff } from "lucide-react";
+import { Seo } from "@/components/seo/Seo";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ const SignIn = () => {
   };
   return (
     <Layout hideFooter>
+      <Seo noIndex />
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-6 pt-32 pb-16 bg-background">
         <div className="w-full max-w-md bg-card border border-border px-8 py-10 shadow-luxury">
           <p className="text-luxury-subtitle mb-3">Welcome Back</p>

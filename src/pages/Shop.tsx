@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Product } from '@/types';
+import { Seo } from '@/components/seo/Seo';
 
 const priceRanges = [
   { label: 'All Prices', min: 0, max: Infinity },
@@ -26,6 +27,8 @@ const Shop = () => {
   const isNewFilter = searchParams.get('filter') === 'new';
   const initialSubcategory = searchParams.get('sub') || 'All';
   const searchQuery = (searchParams.get('search') || '').trim();
+
+  const shopTitle = isNewFilter ? 'New Arrivals' : 'Shop';
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialSubcategory);
@@ -289,7 +292,12 @@ const Shop = () => {
 
   return (
     <Layout>
-      <div className="pt-32 pb-24 px-6">
+      <Seo
+        title={`${shopTitle} | Zahralareina (Zahra La Reina / ZahraLareina Luxe)`}
+        description="Browse luxury bags, shoes, and accessories at Zahralareina — also searched as Zahra La Reina, ZahraLareina Luxe, Zahralarina, Zahra Reina, Zahra Laraina, Zahra Lareena, and Zahra Raina."
+        canonicalPath="/shop"
+      />
+      <div className="pt-32 pb-24 px-6 bg-background">
         <div className="container mx-auto">
           {/* Header */}
           <div className="text-center mb-16 px-4">

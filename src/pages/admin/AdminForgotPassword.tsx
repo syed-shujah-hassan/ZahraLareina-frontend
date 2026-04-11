@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { Seo } from '@/components/seo/Seo';
 
 const AdminForgotPassword = () => {
   const navigate = useNavigate();
@@ -74,111 +75,114 @@ const AdminForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md border border-border bg-card/80 backdrop-blur-sm px-8 py-10 shadow-soft">
-        <div className="mb-6 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">Admin Password Reset</p>
-          <h1 className="font-serif text-2xl tracking-wide mb-1">ZahraLareina Studio</h1>
-          <p className="text-xs text-muted-foreground">Reset access to your admin studio securely.</p>
-        </div>
+    <>
+      <Seo noIndex />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md border border-border bg-card/80 backdrop-blur-sm px-8 py-10 shadow-soft">
+          <div className="mb-6 text-center">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">Admin Password Reset</p>
+            <h1 className="font-serif text-2xl tracking-wide mb-1">ZahraLareina Studio</h1>
+            <p className="text-xs text-muted-foreground">Reset access to your admin studio securely.</p>
+          </div>
 
-        {step === 'email' ? (
-          <form onSubmit={handleRequestCode} className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Admin Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
-                placeholder="admin@studio.com"
-                required
-              />
-            </div>
-
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {message && <p className="text-xs text-foreground/80">{message}</p>}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full btn-luxury disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Sending Code...' : 'Send Reset Code'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/admin/login')}
-              className="w-full mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Back to Admin Login
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleResetPassword} className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Verification Code
-              </label>
-              <input
-                type="text"
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
-                placeholder="Enter the code from your email"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                New Password
-              </label>
-              <div className="relative">
+          {step === 'email' ? (
+            <form onSubmit={handleRequestCode} className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Admin Email
+                </label>
                 <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  className="w-full border border-border bg-background px-4 py-3 pr-10 text-sm outline-none focus:border-foreground transition-colors"
-                  placeholder="Create a new password"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
+                  placeholder="admin@studio.com"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(prev => !prev)}
-                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
-            </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {message && <p className="text-xs text-foreground/80">{message}</p>}
+              {error && <p className="text-xs text-destructive">{error}</p>}
+              {message && <p className="text-xs text-foreground/80">{message}</p>}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full btn-luxury disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Updating Password...' : 'Reset Password'}
-            </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full btn-luxury disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Sending Code...' : 'Send Reset Code'}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setStep('email')}
-              className="w-full mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Use a different email
-            </button>
-          </form>
-        )}
+              <button
+                type="button"
+                onClick={() => navigate('/admin/login')}
+                className="w-full mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Back to Admin Login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground transition-colors"
+                  placeholder="Enter the code from your email"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    className="w-full border border-border bg-background px-4 py-3 pr-10 text-sm outline-none focus:border-foreground transition-colors"
+                    placeholder="Create a new password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(prev => !prev)}
+                    className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
+              {message && <p className="text-xs text-foreground/80">{message}</p>}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full btn-luxury disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Updating Password...' : 'Reset Password'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep('email')}
+                className="w-full mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

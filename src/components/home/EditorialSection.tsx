@@ -27,7 +27,7 @@ export const EditorialSection = () => {
             <div className="gold-line mb-8" />
             
             <p className="text-muted-foreground leading-relaxed mb-5 text-sm md:text-base">
-              At ZahraLareina, we believe that true luxury lies in the details. Each piece 
+              At Zahralareina (often searched as Zahra La Reina or ZahraLareina Luxe), we believe that true luxury lies in the details. Each piece 
               in our collection is meticulously crafted by skilled artisans using the 
               finest materials sourced from around the world.
             </p>

@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Eye, EyeOff } from "lucide-react";
+import { Seo } from "@/components/seo/Seo";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const ForgotPassword = () => {
 
   return (
     <Layout hideFooter>
+      <Seo noIndex />
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-6 pt-32 pb-16 bg-background">
         <div className="w-full max-w-md bg-card border border-border px-8 py-10 shadow-luxury">
           <p className="text-luxury-subtitle mb-3">Password Assistance</p>

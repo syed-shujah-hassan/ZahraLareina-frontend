@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProductCard } from '@/components/product/ProductCard';
+import { Seo } from '@/components/seo/Seo';
 import { useCart } from '@/context/CartContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { Heart, Minus, Plus, ChevronLeft, CheckCircle } from 'lucide-react';
@@ -111,6 +112,33 @@ const ProductDetail = () => {
 
   const saved = isSaved(product.id);
 
+  const effectivePrice =
+    typeof product.discount === 'number' && product.discount > 0 && product.discount < product.price
+      ? product.discount
+      : product.price;
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    sku: product.id,
+    brand: {
+      '@type': 'Brand',
+      name: 'Zahralareina',
+      alternateName: ['Zahra La Reina', 'ZahraLareina Luxe', 'Zahralarina', 'Zahra Reina', 'Zahra Laraina'],
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://zahralareina.com/product/${product.id}`,
+      priceCurrency: 'USD',
+      price: String(effectivePrice),
+      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+  };
+
   const handleAddToCart = () => {
     if (!selectedSize && product.sizes.length > 1) {
       setSizeError(true);
@@ -125,6 +153,13 @@ const ProductDetail = () => {
 
   return (
     <Layout>
+      <Seo
+        title={`${product.name} | Zahralareina (Zahra La Reina / ZahraLareina Luxe)`}
+        description={product.description || `Shop ${product.name} at Zahralareina — a curated luxury fashion store.`}
+        canonicalPath={`/product/${product.id}`}
+        imageUrl={product.images?.[0]}
+        jsonLd={productJsonLd}
+      />
       <div className="pt-28 pb-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* Back Link */}

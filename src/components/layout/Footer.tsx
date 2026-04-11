@@ -234,7 +234,9 @@ export const Footer = () => {
 
           {/* Bottom Links */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-xs text-background/40">
-            <p>© 2024 ZAHRA LA REINA. All rights reserved.</p>
+            <p>
+              © 2024 Zahralareina (Zahra La Reina). All rights reserved.
+            </p>
             <div className="flex gap-6">
               <Link to="/privacy" className="hover:text-background transition-colors">
                 Privacy Policy

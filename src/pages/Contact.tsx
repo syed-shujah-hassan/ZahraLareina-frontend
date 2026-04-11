@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { Seo } from "@/components/seo/Seo";
 
 const Contact = () => {
   const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -59,6 +60,11 @@ const Contact = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Contact Zahralareina | Zahra La Reina | ZahraLareina Luxe"
+        description="Contact Zahralareina — a luxury fashion store (also searched as Zahra La Reina, ZahraLareina Luxe, Zahralarina, Zahra Reina, Zahra Laraina, Zahra Lareena, and Zahra Raina)."
+        canonicalPath="/contact"
+      />
       <div className="pt-32 pb-24 px-6 bg-background">
         <div className="container mx-auto max-w-5xl">
           {/* Header */}

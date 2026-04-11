@@ -1,8 +1,14 @@
 import { Layout } from "@/components/layout/Layout";
+import { Seo } from "@/components/seo/Seo";
 
 const About = () => {
   return (
     <Layout>
+      <Seo
+        title="About Zahralareina | Zahra La Reina | ZahraLareina Luxe"
+        description="Learn the story behind Zahralareina (often searched as Zahra La Reina, ZahraLareina Luxe, Zahralarina, Zahra Reina, Zahra Laraina, Zahra Lareena, and Zahra Raina) — a curated luxury boutique for timeless pieces."
+        canonicalPath="/about"
+      />
       <div className="pt-32 pb-24 px-6 bg-background">
         <div className="container mx-auto max-w-5xl">
           {/* Header */}
