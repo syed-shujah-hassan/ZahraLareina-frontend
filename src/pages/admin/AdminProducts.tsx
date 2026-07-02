@@ -10,6 +10,7 @@ const AdminProducts = () => {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [formData, setFormData] = useState({
     name: '',
@@ -19,6 +20,7 @@ const AdminProducts = () => {
     description: '',
     images: [] as string[],
     sizes: '',
+    fabric: '',
     inStock: true,
     discount: '',
     isNew: false,
@@ -71,6 +73,7 @@ const AdminProducts = () => {
           description: p.description,
           images: p.images || [],
           sizes: p.sizes || [],
+          fabric: p.fabric || '',
           inStock: p.inStock,
           isNew: p.isNew,
           discount: p.discount,
@@ -104,6 +107,7 @@ const AdminProducts = () => {
         description: product.description,
         images: product.images || [],
         sizes: product.sizes.join(', '),
+        fabric: product.fabric || '',
         inStock: product.inStock ?? true,
         discount: product.discount ? String(product.discount) : '',
         isNew: !!product.isNew,
@@ -118,6 +122,7 @@ const AdminProducts = () => {
         description: '',
         images: [],
         sizes: '',
+        fabric: '',
         inStock: true,
         discount: '',
         isNew: false,
@@ -133,6 +138,8 @@ const AdminProducts = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
 
     if (formData.images.length < 1) {
       alert('Please upload at least 1 product image.');
@@ -149,15 +156,19 @@ const AdminProducts = () => {
       sizes: formData.sizes.trim()
         ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean)
         : [],
+      fabric: formData.fabric.trim() || undefined,
       inStock: formData.inStock,
       discount: formData.discount ? Number(formData.discount) : undefined,
       isNew: formData.isNew,
     };
 
     try {
+      setIsSubmitting(true);
+      
       const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
       if (!token) {
         alert('Not authorized');
+        setIsSubmitting(false);
         return;
       }
 
@@ -193,6 +204,7 @@ const AdminProducts = () => {
         description: p.description,
         images: p.images || [],
         sizes: p.sizes || [],
+        fabric: p.fabric || '',
         inStock: p.inStock,
         isNew: p.isNew,
         discount: p.discount,
@@ -208,6 +220,8 @@ const AdminProducts = () => {
     } catch (err) {
       console.error(err);
       alert('Failed to save product');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -558,6 +572,18 @@ const AdminProducts = () => {
                   placeholder="S, M, L or One Size (optional)"
                 />
               </div>
+              <div>
+                <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                  Fabric (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.fabric}
+                  onChange={e => setFormData({ ...formData, fabric: e.target.value })}
+                  className="w-full border border-border px-4 py-3 bg-transparent focus:outline-none focus:border-foreground"
+                  placeholder="e.g., Cotton, Silk, Leather"
+                />
+              </div>
               {/* New Arrival flag */}
               <div>
                 <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
@@ -596,8 +622,8 @@ const AdminProducts = () => {
                   <option value="out">Out of Stock</option>
                 </select>
               </div>
-              <button type="submit" className="w-full btn-luxury">
-                <span>{editingProduct ? 'Update Product' : 'Add Product'}</span>
+              <button type="submit" className="w-full btn-luxury" disabled={isSubmitting}>
+                <span>{isSubmitting ? 'Saving...' : (editingProduct ? 'Update Product' : 'Add Product')}</span>
               </button>
             </form>
           </div>

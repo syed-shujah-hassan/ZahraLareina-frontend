@@ -47,6 +47,7 @@ const ProductDetail = () => {
           images: p.images || [],
           description: p.description,
           sizes: p.sizes || [],
+          fabric: p.fabric || '',
           inStock: p.inStock,
           isNew: p.isNew,
           discount: p.discount,
@@ -69,6 +70,7 @@ const ProductDetail = () => {
               images: rp.images || [],
               description: rp.description,
               sizes: rp.sizes || [],
+              fabric: rp.fabric || '',
               inStock: rp.inStock,
               isNew: rp.isNew,
               discount: rp.discount,
@@ -334,6 +336,12 @@ const ProductDetail = () => {
                   <span className="text-muted-foreground">Category</span>
                   <span>{product.category}</span>
                 </div>
+                {product.fabric && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fabric</span>
+                    <span>{product.fabric}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Availability</span>
                   <span className={product.inStock ? "text-green-600" : "text-destructive"}>

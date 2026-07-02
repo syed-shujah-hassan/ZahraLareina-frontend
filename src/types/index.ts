@@ -7,6 +7,7 @@ export interface Product {
   images: string[];
   description: string;
   sizes: string[];
+  fabric?: string;
   inStock: boolean;
   isNew?: boolean;
   discount?: number;
