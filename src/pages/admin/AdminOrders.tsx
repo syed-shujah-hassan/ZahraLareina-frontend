@@ -11,6 +11,22 @@ type AdminOrderItem = {
   image: string;
 };
 
+type Address = {
+  firstName?: string;
+  lastName?: string;
+  address: string;
+  address2?: string;
+  city: string;
+  zip?: string;
+  country: string;
+  phone: string;
+};
+
+type ContactInfo = {
+  fullName?: string;
+  phone?: string;
+};
+
 type AdminOrder = {
   id: string;
   orderNumber: string;
@@ -20,6 +36,12 @@ type AdminOrder = {
   total: number;
   status: keyof typeof statusColors;
   date: string;
+  contactInfo?: ContactInfo;
+  shippingAddress?: Address;
+  billingAddress?: Address;
+  paymentMethod?: string;
+  shippingMethod?: string;
+  notes?: string;
 };
 
 const statusColors = {
@@ -65,11 +87,17 @@ const AdminOrders = () => {
         const mapped: AdminOrder[] = (data.orders || []).map((o: any) => ({
           id: o.id || o._id,
           orderNumber: o.orderNumber || o.id || o._id,
-          customerName: o.user?.fullName || o.user?.email || o.email,
-          email: o.user?.email || o.email,
+          customerName: o.contactInfo?.fullName || o.user?.fullName || o.shippingAddress?.firstName + ' ' + o.shippingAddress?.lastName || o.email,
+          email: o.email || o.user?.email,
           total: o.total || 0,
           status: (o.status || 'pending') as keyof typeof statusColors,
           date: o.createdAt ? o.createdAt.substring(0, 10) : '',
+          contactInfo: o.contactInfo,
+          shippingAddress: o.shippingAddress,
+          billingAddress: o.billingAddress,
+          paymentMethod: o.paymentMethod,
+          shippingMethod: o.shippingMethod,
+          notes: o.notes,
           items: (o.items || []).map((it: any) => ({
             name: it.name,
             size: it.size,
@@ -203,7 +231,7 @@ const AdminOrders = () => {
       {selectedOrder && (
         <>
           <div className="fixed inset-0 bg-foreground/30 z-50" onClick={() => setSelectedOrder(null)} />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-background z-50 animate-fade-in max-h-[90vh] overflow-y-auto">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-background z-50 animate-fade-in max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <h2 className="font-serif text-xl">Order {selectedOrder.orderNumber}</h2>
               <button onClick={() => setSelectedOrder(null)} aria-label="Close">
@@ -211,15 +239,6 @@ const AdminOrders = () => {
               </button>
             </div>
             <div className="p-6 space-y-6">
-              {/* Customer Info */}
-              <div>
-                <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
-                  Customer
-                </h3>
-                <p className="font-medium">{selectedOrder.customerName}</p>
-                <p className="text-sm text-muted-foreground">{selectedOrder.email}</p>
-              </div>
-
               {/* Status */}
               <div>
                 <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
@@ -230,10 +249,86 @@ const AdminOrders = () => {
                 </span>
               </div>
 
+              {/* Customer Info */}
+              <div>
+                <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                  Customer Details
+                </h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Name:</span> {selectedOrder.customerName}</p>
+                  <p><span className="font-medium">Email:</span> {selectedOrder.email}</p>
+                  {selectedOrder.contactInfo?.phone && (
+                    <p><span className="font-medium">Phone:</span> {selectedOrder.contactInfo.phone}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              {selectedOrder.shippingAddress && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                    Shipping Address
+                  </h3>
+                  <div className="space-y-1 text-sm">
+                    <p>{selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}</p>
+                    <p>{selectedOrder.shippingAddress.address}</p>
+                    {selectedOrder.shippingAddress.address2 && <p>{selectedOrder.shippingAddress.address2}</p>}
+                    <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.zip} {selectedOrder.shippingAddress.country}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedOrder.shippingAddress.phone}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Billing Address */}
+              {selectedOrder.billingAddress && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                    Billing Address
+                  </h3>
+                  <div className="space-y-1 text-sm">
+                    <p>{selectedOrder.billingAddress.firstName} {selectedOrder.billingAddress.lastName}</p>
+                    <p>{selectedOrder.billingAddress.address}</p>
+                    {selectedOrder.billingAddress.address2 && <p>{selectedOrder.billingAddress.address2}</p>}
+                    <p>{selectedOrder.billingAddress.city}, {selectedOrder.billingAddress.zip} {selectedOrder.billingAddress.country}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedOrder.billingAddress.phone}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment & Shipping Method */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedOrder.paymentMethod && (
+                  <div>
+                    <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                      Payment Method
+                    </h3>
+                    <p className="text-sm">{selectedOrder.paymentMethod}</p>
+                  </div>
+                )}
+                {selectedOrder.shippingMethod && (
+                  <div>
+                    <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                      Shipping Method
+                    </h3>
+                    <p className="text-sm">{selectedOrder.shippingMethod}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Notes */}
+              {selectedOrder.notes && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
+                    Order Notes
+                  </h3>
+                  <p className="text-sm bg-secondary/50 p-3 rounded">{selectedOrder.notes}</p>
+                </div>
+              )}
+
               {/* Items */}
               <div>
                 <h3 className="text-xs uppercase tracking-[0.15em] mb-4 text-muted-foreground">
-                  Items
+                  Order Items
                 </h3>
                 <div className="space-y-4">
                   {selectedOrder.items.map((item, idx) => (

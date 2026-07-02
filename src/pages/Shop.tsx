@@ -297,10 +297,9 @@ const Shop = () => {
         description="Browse luxury bags, shoes, and accessories at Zahralareina — also searched as Zahra La Reina, ZahraLareina Luxe, Zahralarina, Zahra Reina, Zahra Laraina, Zahra Lareena, and Zahra Raina."
         canonicalPath="/shop"
       />
-      <div className="pt-32 pb-24 px-6 bg-background">
-        <div className="container mx-auto">
+      <div className="pt-32 pb-24 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 bg-background">
           {/* Header */}
-          <div className="text-center mb-16 px-4">
+          <div className="text-center mb-16">
             <h1 className="font-serif text-3xl md:text-5xl tracking-wide leading-tight break-words">
               {isNewFilter
                 ? 'New Arrivals'
@@ -367,7 +366,7 @@ const Shop = () => {
                   <p className="text-destructive">{productsError}</p>
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-6 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                   {filteredProducts.map((product, index) => (
                     <div
                       key={product.id}
@@ -385,7 +384,6 @@ const Shop = () => {
               )}
             </div>
           </div>
-        </div>
       </div>
 
       {/* Mobile Filter Modal */}

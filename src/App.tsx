@@ -25,6 +25,7 @@ import TermsOfService from "./pages/TermsOfService";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import ThankYou from "./pages/ThankYou";
 import SavedItems from "./pages/SavedItems";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { RequireAdmin } from "./components/admin/RequireAdmin";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/saved" element={<SavedItems />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />

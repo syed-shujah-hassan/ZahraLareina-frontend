@@ -80,21 +80,21 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       </div>
 
       <div className="pt-4 space-y-1">
-        <h3 className="font-serif text-[1.05rem] tracking-wide leading-snug line-clamp-2">
+        <h3 className="font-serif text-[1.05rem] sm:text-[1.1rem] tracking-wide leading-snug line-clamp-2 font-bold uppercase">
           {product.name}
         </h3>
-        <div className="text-sm mt-1">
+        <div className="text-sm mt-1 space-y-1">
           {hasDiscount ? (
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground line-through">
-                {formatPrice(product.price)}
-              </span>
-              <span className="font-medium">
+            <>
+              <span className="text-primary text-lg sm:text-xl font-serif block">
                 {formatPrice(displayPrice)}
               </span>
-            </div>
+              <span className="text-muted-foreground line-through text-sm sm:text-base block">
+                {formatPrice(product.price)}
+              </span>
+            </>
           ) : (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground text-lg sm:text-xl font-serif">
               {formatPrice(displayPrice)}
             </span>
           )}

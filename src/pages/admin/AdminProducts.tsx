@@ -248,7 +248,7 @@ const AdminProducts = () => {
 
     try {
       const url = await uploadImageToCloudinary(file);
-      setFormData(prev => ({ ...prev, images: [...prev.images, url].slice(0, 4) }));
+      setFormData(prev => ({ ...prev, images: [...prev.images, url].slice(0, 10) }));
     } catch (err) {
       console.error(err);
       alert('Failed to upload product image');
@@ -495,7 +495,7 @@ const AdminProducts = () => {
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-[0.15em] mb-2 text-muted-foreground">
-                  Product Images (up to 4)
+                  Product Images (up to 10)
                 </label>
                 <div className="space-y-3">
                   <div className="flex gap-2 flex-wrap">

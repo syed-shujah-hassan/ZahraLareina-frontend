@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useCart } from '@/context/CartContext';
@@ -7,58 +6,11 @@ import { Minus, Plus, X, ShoppingBag } from 'lucide-react';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, cartTotal } = useCart();
   const { formatPrice } = useStoreSettings();
-  const [isPlacing, setIsPlacing] = useState(false);
-  const [error, setError] = useState('');
 
-  const API_BASE = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
-
-  const handleCheckout = async () => {
-    if (typeof window === 'undefined') return;
-    setError('');
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/signin', { replace: true, state: { from: '/cart' } });
-      return;
-    }
-
-    try {
-      setIsPlacing(true);
-      const payload = {
-        items: items.map(item => ({
-          productId: item.product.id,
-          name: item.product.name,
-          image: item.product.images?.[0],
-          price: item.product.price,
-          size: item.size,
-          quantity: item.quantity,
-        })),
-        total: cartTotal,
-      };
-
-      const res = await fetch(`${API_BASE}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to place order');
-      }
-
-      clearCart();
-      navigate('/orders');
-    } catch (err: any) {
-      setError(err.message || 'Failed to place order');
-    } finally {
-      setIsPlacing(false);
-    }
+  const handleCheckout = () => {
+    navigate('/checkout');
   };
 
   if (items.length === 0) {
@@ -139,8 +91,8 @@ const Cart = () => {
                     </div>
 
                     {/* Quantity & Subtotal */}
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center border border-border">
+                    <div className="flex flex-col gap-3 mt-4">
+                      <div className="flex items-center border border-border w-fit">
                         <button
                           onClick={() =>
                             updateQuantity(item.product.id, item.size, item.quantity - 1)
@@ -194,17 +146,14 @@ const Cart = () => {
                     </span>
                   </div>
                 </div>
-                {error && (
-                  <p className="text-xs text-destructive mb-3">{error}</p>
-                )}
+
 
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  disabled={isPlacing}
-                  className="w-full btn-luxury mb-4 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full btn-luxury mb-4"
                 >
-                  <span>{isPlacing ? 'Placing Order...' : 'Place Order'}</span>
+                  <span>Proceed to Checkout</span>
                 </button>
 
                 <Link

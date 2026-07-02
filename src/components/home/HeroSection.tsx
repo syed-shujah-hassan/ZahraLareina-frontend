@@ -24,17 +24,12 @@ export const HeroSection = () => {
 
       {/* Content */}
       <div 
-        className="relative z-10 text-center px-6 pt-10 md:pt-16"
+        className="relative z-10 text-center px-6"
         style={{
           opacity,
           transform: `translateY(${translateY}px)`,
         }}
       >
-        {/* Subtitle */}
-        <p className="text-luxury-subtitle mb-6 animate-fade-up">
-          Luxury Redefined
-        </p>
-
         {/* Brand Name */}
         <h1
           className={cn(

@@ -49,12 +49,11 @@ export const CategoryShowcase = () => {
   }, []);
 
   return (
-    <section className="py-24 bg-secondary">
-      <div className="container mx-auto px-6">
+    <section className="pt-16 pb-12 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 bg-white">
         {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-luxury-subtitle mb-3">Explore</p>
-          <h2 className="font-serif text-3xl md:text-4xl tracking-wide">
+        <div className="text-center mb-10">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-muted-foreground mb-2">EXPLORE</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide">
             Shop by Category
           </h2>
         </div>
@@ -65,33 +64,28 @@ export const CategoryShowcase = () => {
         ) : error ? (
           <p className="text-center text-sm text-destructive">{error}</p>
         ) : categories.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-6 xl:gap-8">
             {categories.map((category, index) => (
               <Link
                 key={category.name}
                 to={`/shop?category=${encodeURIComponent(category.name)}`}
-                className="group relative block w-full h-56 md:h-72 overflow-hidden animate-fade-up"
+                className="group flex flex-col items-center"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
-                {/* Image */}
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/40 transition-colors duration-500" />
-                
-                {/* Overlay Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-5 md:p-6 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                  <h3 className="font-serif text-base md:text-2xl tracking-wide leading-snug text-white break-words max-w-full">
-                    {category.name}
-                  </h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity duration-300 border-b border-background pb-1">
-                    Shop Now
-                  </span>
+                {/* Circular Image - Perfect Circle for all screens */}
+                <div className="w-16 sm:w-20 md:w-28 lg:w-36 xl:w-44 2xl:w-56 overflow-hidden mb-2 sm:mb-3 md:mb-4 lg:mb-6 rounded-full relative">
+                  <div className="pt-[100%]"></div>
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="absolute top-0 left-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
+                
+                {/* Category Name */}
+                <h3 className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm xl:text-lg 2xl:text-xl uppercase tracking-widest font-serif text-center break-words">
+                  {category.name}
+                </h3>
               </Link>
             ))}
           </div>
@@ -100,7 +94,6 @@ export const CategoryShowcase = () => {
             No categories are available to show on the home page yet.
           </p>
         )}
-      </div>
     </section>
   );
 };
