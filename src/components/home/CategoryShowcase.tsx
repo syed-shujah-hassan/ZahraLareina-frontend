@@ -64,7 +64,7 @@ export const CategoryShowcase = () => {
         ) : error ? (
           <p className="text-center text-sm text-destructive">{error}</p>
         ) : categories.length > 0 ? (
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-6 xl:gap-8">
+          <div className="grid grid-cols-4 gap-2 sm:gap-2 md:gap-3 lg:gap-6 xl:gap-8">
             {categories.map((category, index) => (
               <Link
                 key={category.name}
@@ -73,7 +73,7 @@ export const CategoryShowcase = () => {
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
                 {/* Circular Image - Perfect Circle for all screens */}
-                <div className="w-16 sm:w-20 md:w-28 lg:w-36 xl:w-44 2xl:w-56 overflow-hidden mb-2 sm:mb-3 md:mb-4 lg:mb-6 rounded-full relative">
+                <div className="w-20 sm:w-20 md:w-28 lg:w-36 xl:w-44 2xl:w-56 overflow-hidden mb-2 sm:mb-3 md:mb-4 lg:mb-6 rounded-full relative">
                   <div className="pt-[100%]"></div>
                   <img
                     src={category.image}
@@ -83,7 +83,7 @@ export const CategoryShowcase = () => {
                 </div>
                 
                 {/* Category Name */}
-                <h3 className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm xl:text-lg 2xl:text-xl uppercase tracking-widest font-serif text-center break-words">
+                <h3 className="text-[12px] sm:text-[10px] md:text-xs lg:text-sm xl:text-lg 2xl:text-xl uppercase tracking-widest font-serif text-center break-words text-foreground">
                   {category.name}
                 </h3>
               </Link>
